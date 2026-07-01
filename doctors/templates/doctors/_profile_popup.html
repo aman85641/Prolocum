@@ -1,0 +1,79 @@
+{# doctors/_profile_popup.html — Ultra Compact & Cute Design #}
+
+{% if profile %}
+<div style="background: white; font-family: 'Inter', sans-serif; overflow: hidden; max-width: 420px; margin: auto;">
+    
+    <div style="background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%); padding: 24px 16px 12px; text-align: center;">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: white; margin: 0 auto 10px; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(83, 74, 183, 0.15);">
+            {% if profile.profile_photo %}
+                <img src="{{ profile.profile_photo.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#534AB7; background:#EEEDFE;">
+                    {{ profile.full_name|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+        <h3 style="font-size: 16px; font-weight: 800; color: #1e293b; margin: 0;">{{ profile.full_name }}</h3>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 5px;">
+            <span style="font-size: 9px; font-weight: 800; color: #534AB7; background: #EEEDFE; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">
+                {{ profile.qualification|upper }}
+            </span>
+            {% if profile.verification_status == 'approved' %}
+                <span style="font-size: 9px; font-weight: 800; color: #1D9E75; background: #E1F5EE; padding: 2px 8px; border-radius: 99px;">VERIFIED</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="padding: 16px 20px 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; background: #f9fafb; padding: 12px; border-radius: 12px;">
+            <div>
+                <label style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 1px;">Exp.</label>
+                <span style="font-size: 13px; font-weight: 600; color: #334155;">{{ profile.experience|default:"0" }} Yrs</span>
+            </div>
+            <div>
+                <label style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 1px;">Gender</label>
+                <span style="font-size: 13px; font-weight: 600; color: #334155;">{{ profile.sex|title|default:"--" }}</span>
+            </div>
+            <div style="grid-column: span 2; border-top: 1px solid #f1f5f9; pt: 8px; margin-top: 4px;">
+                <label style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 1px;">Registration & City</label>
+                <span style="font-size: 12px; font-weight: 600; color: #334155;">{{ profile.registration_no|default:"--" }} • {{ profile.city|default:"--" }}</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 6px;">Ward & Skills</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                {% for ward in profile.get_ward_list %}
+                    <span style="font-size: 10px; background: white; color: #534AB7; padding: 3px 10px; border-radius: 6px; border: 1px solid #EEEDFE; font-weight: 600;">{{ ward|title }}</span>
+                {% endfor %}
+                {% for proc in profile.get_procedure_list %}
+                    <span style="font-size: 10px; background: #f0fdf4; color: #166534; padding: 3px 10px; border-radius: 6px; border: 1px solid #bbf7d0; font-weight: 600;">{{ proc }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if profile.aadhar_photo or profile.pan_card %}
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+               
+                {% if profile.aadhar_photo %}
+                    <a href="{{ profile.aadhar_photo.url }}" target="_blank" style="text-decoration:none; text-align:center; background:#f8fafc; padding:8px 4px; border-radius:8px; border:1px solid #e2e8f0;">
+                        <span style="font-size:10px; font-weight:700; color:#475569; display:block;">Aadhar</span>
+                    </a>
+                {% endif %}
+                {% if profile.pan_card %}
+                    <a href="{{ profile.pan_card.url }}" target="_blank" style="text-decoration:none; text-align:center; background:#f8fafc; padding:8px 4px; border-radius:8px; border:1px solid #e2e8f0;">
+                        <span style="font-size:10px; font-weight:700; color:#475569; display:block;">PAN Card</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% else %}
+<div style="text-align:center; padding:32px 16px; color:#94a3b8; font-size:12px;">
+    <p>Profile details not available</p>
+</div>
+{% endif %}

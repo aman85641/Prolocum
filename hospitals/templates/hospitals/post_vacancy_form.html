@@ -1,0 +1,261 @@
+{% extends 'hospitals/base.html' %}
+{% block title %}Post Vacancy {% endblock %}
+{% block page_title %}Post New Vacancy{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; }
+    .form-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .form-section-title { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; display: block; }
+    .f-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    .f-group { display: flex; flex-direction: column; gap: 8px; }
+    .f-full { grid-column: 1 / -1; }
+    .f-label { font-size: 13px; font-weight: 700; color: #334155; }
+    .required-star { color: #E24B4A; margin-left: 2px; }
+    .f-input { padding: 12px 16px; border-radius: 10px; border: 1px solid #d1d5db; font-size: 14px; outline: none; transition: all 0.2s; color: #1e293b; }
+    .f-input:focus { border-color: #534AB7; box-shadow: 0 0 0 4px rgba(83,74,183,0.1); }
+    textarea.f-input { resize: vertical; min-height: 110px; }
+    .type-pill { display: inline-flex; align-items: center; gap: 8px; background: #EEEDFE; color: #534AB7; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 24px; }
+    .urgent-toggle { display: flex; align-items: center; gap: 10px; padding: 14px; background: #FFF1F2; border-radius: 10px; border: 1px solid #FECACA; cursor: pointer; transition: 0.2s; }
+    .urgent-toggle:hover { background: #FFE4E6; }
+    .form-actions { display: flex; gap: 12px; margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 24px; }
+    .btn-publish { flex: 2; padding: 14px; border-radius: 10px; background: #534AB7; color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn-publish:hover { background: #433a96; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(83,74,183,0.2); }
+    .btn-cancel { flex: 1; padding: 14px; border-radius: 10px; background: white; color: #64748b; border: 1px solid #e2e8f0; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; }
+    .shift-btn { padding: 8px 18px; border-radius: 20px; border: 2px solid #e2e8f0; background: white; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s; }
+    .shift-btn:hover { border-color: #534AB7; color: #534AB7; background: #EEEDFE; }
+    .shift-btn.active { border-color: #534AB7; background: #534AB7; color: white; }
+    @media(max-width: 640px) { .f-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="dash-wrap">
+    <div class="form-card">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div class="type-pill">
+                <span>{% if shift_type == 'single' %}Single Shift{% else %}Multiple / Recurring Shift{% endif %}</span>
+            </div>
+            <a href="{% url 'hospital_post_vacancy' %}" style="font-size:12px; color:#534AB7; font-weight:600; text-decoration:none;">Change Type</a>
+        </div>
+{% if form.errors %}
+<div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:10px; padding:14px 18px; margin-bottom:20px;">
+    <p style="font-size:13px; font-weight:700; color:#B91C1C; margin:0 0 6px;">Some fields are not correct:</p>
+    {% for field in form %}
+        {% for error in field.errors %}
+        <p style="font-size:13px; color:#991B1B; margin:2px 0;">• <strong>{{ field.label }}:</strong> {{ error }}</p>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% endif %}
+        <form method="post" action="{% url 'hospital_post_vacancy' %}">
+            {% csrf_token %}
+            <input type="hidden" name="shift_type" value="{{ shift_type }}">
+            <input type="hidden" name="submit_form" value="1">
+
+            <!-- ===== Facility Information ===== -->
+            <span class="form-section-title">Facility Information</span>
+            <div class="f-grid">
+                <div class="f-group f-full">
+                    <label class="f-label">Hospital / Clinic Name<span class="required-star">*</span></label>
+                    <input type="text" name="hospital_name" value="{{ form.hospital_name.value|default:'' }}" class="f-input" placeholder="e.g. City General Hospital" required>
+                </div>
+                <div class="f-group f-full">
+                    <label class="f-label">Full Address<span class="required-star">*</span></label>
+                    <input type="text" name="location" value="{{ form.location.value|default:'' }}" class="f-input" placeholder="Street, Building, Landmark" required>
+                </div>
+                <div class="f-group">
+                    <label class="f-label">City<span class="required-star">*</span></label>
+                    <input type="text" name="city" value="{{ form.city.value|default:'' }}" class="f-input" placeholder="e.g. New Delhi" required>
+                </div>
+                <div class="f-group">
+                    <label class="f-label">State</label>
+                    <input type="text" name="state" value="{{ form.state.value|default:'' }}" class="f-input" placeholder="e.g. Delhi">
+                </div>
+                <div class="f-group">
+                    <label class="f-label">Contact Email</label>
+                    <input type="email" name="contact_email" value="{{ form.contact_email.value|default:'' }}" class="f-input" placeholder="hr@hospital.com">
+                </div>
+                <div class="f-group">
+                    <label class="f-label">Contact Phone</label>
+                    <input type="text" name="contact_phone" value="{{ form.contact_phone.value|default:'' }}" class="f-input" placeholder="e.g. 9876543210">
+                </div>
+            </div>
+
+            <!-- ===== Staffing Requirements ===== -->
+            <span class="form-section-title">Staffing Requirements</span>
+            <div class="f-grid">
+                <div class="f-group">
+                    <label class="f-label">Staff Type<span class="required-star">*</span></label>
+                    <select name="staff_type" class="f-input" id="staff_type_select" onchange="toggleQual()">
+                        <option value="doctor" {% if form.staff_type.value == 'doctor' %}selected{% endif %}>Doctor</option>
+                        <option value="nurse"  {% if form.staff_type.value == 'nurse'  %}selected{% endif %}>Nurse</option>
+                    </select>
+                </div>
+                <div class="f-group">
+                    <label class="f-label">Designation</label>
+                    <input type="text" name="designation" value="{{ form.designation.value|default:'' }}" class="f-input" placeholder="e.g. ICU Specialist">
+                </div>
+
+                <!-- Doctor Qualification -->
+                <div class="f-group" id="doctor_qual">
+    <label class="f-label">Doctor Qualification</label>
+    <select name="doctor_qualification" class="f-input">
+        <option value="">-- Select --</option>
+        <option value="mbbs" {% if form.doctor_qualification.value == 'mbbs' %}selected{% endif %}>MBBS</option>
+        <option value="bams" {% if form.doctor_qualification.value == 'bams' %}selected{% endif %}>BAMS</option>
+        <option value="bhms" {% if form.doctor_qualification.value == 'bhms' %}selected{% endif %}>BHMS</option>
+        <option value="bams_bhms" {% if form.doctor_qualification.value == 'bams_bhms' %}selected{% endif %}>BAMS/BHMS</option>  <!-- ✅ yeh add karo -->
+    </select>
+</div>
+
+                <!-- Nurse Qualification -->
+                <div class="f-group" id="nurse_qual">
+                    <label class="f-label">Nurse Qualification</label>
+                    <select name="nurse_qualification" class="f-input">
+                        <option value="">-- Select --</option>
+                        <option value="gnm"         {% if form.nurse_qualification.value == 'gnm'         %}selected{% endif %}>GNM</option>
+                        <option value="bsc_nursing" {% if form.nurse_qualification.value == 'bsc_nursing' %}selected{% endif %}>B.Sc Nursing</option>
+                        <option value="anm"         {% if form.nurse_qualification.value == 'anm'         %}selected{% endif %}>ANM</option>
+                        <option value="msc_nursing" {% if form.nurse_qualification.value == 'msc_nursing' %}selected{% endif %}>M.Sc Nursing</option>
+                    </select>
+                </div>
+
+                <!-- Ward Type -->
+                <div class="f-group">
+                    <label class="f-label">Ward Type</label>
+                    <select name="ward_type" class="f-input">
+                        <option value="">-- Select --</option>
+                        <option value="general"   {% if form.ward_type.value == 'general'   %}selected{% endif %}>General Ward</option>
+                        <option value="icu"       {% if form.ward_type.value == 'icu'       %}selected{% endif %}>ICU</option>
+                        <option value="casualty"  {% if form.ward_type.value == 'casualty'  %}selected{% endif %}>Casualty</option>
+                        <option value="maternity" {% if form.ward_type.value == 'maternity' %}selected{% endif %}>Maternity</option>
+                    </select>
+                </div>
+
+                <div class="f-group">
+                    <label class="f-label">Bed Capacity</label>
+                    <input type="number" name="bed_capacity" value="{{ form.bed_capacity.value|default:'' }}" class="f-input" placeholder="e.g. 50">
+                </div>
+                <div class="f-group f-full">
+                    <label class="f-label">Experience Required</label>
+                    <input type="text" name="experience_required" value="{{ form.experience_required.value|default:'' }}" class="f-input" placeholder="e.g. 1-3 Years Professional Experience">
+                </div>
+            </div>
+
+            <!-- ===== Schedule & Compensation ===== -->
+            <span class="form-section-title">Schedule & Compensation</span>
+            <div class="f-grid">
+
+                <div class="f-group">
+    <label class="f-label">Joining Date <span style="color:#9ca3af; font-weight:500;">(Optional)</span></label>
+    <input type="date" name="start_date" value="{{ form.start_date.value|default:'' }}" class="f-input">
+    <span style="font-size:12px; color:#94a3b8;">Date when staff will join</span>
+</div>
+
+<div class="f-group">
+    <label class="f-label">Last Date of Application</label>
+    <input type="date" name="end_date" value="{{ form.end_date.value|default:'' }}" class="f-input">
+    <span style="font-size:12px; color:#94a3b8;">Must be before joining date</span>
+</div>
+
+                <div class="f-group f-full">
+                    <label class="f-label">Shift Time<span class="required-star">*</span></label>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                        <button type="button" class="shift-btn" onclick="setShift('06:00','14:00','Morning Shift',this)">🌅 Morning</button>
+                        <button type="button" class="shift-btn" onclick="setShift('14:00','22:00','Evening Shift',this)">🌆 Evening</button>
+                        <button type="button" class="shift-btn" onclick="setShift('22:00','06:00','Night Shift',this)">🌙 Night</button>
+                        <button type="button" class="shift-btn" onclick="setShift('','','Rotational Shift',this)">🔄 Rotational</button>
+                    </div>
+                    <div id="selected_shift_label" style="font-size:13px; color:#534AB7; font-weight:700; margin-bottom:8px;"></div>
+                    <input type="hidden" name="start_time"  id="start_time_input"  value="{{ form.start_time.value|default:'' }}">
+                    <input type="hidden" name="end_time"    id="end_time_input"    value="{{ form.end_time.value|default:'' }}">
+                    <input type="hidden" name="shift_label" id="shift_label_input" value="{{ form.shift_label.value|default:'' }}">
+
+                    <div style="display:flex; gap:12px; margin-top:4px;">
+                        <div style="flex:1;">
+                            <label class="f-label" style="font-weight:500; color:#64748b; margin-bottom:6px; display:block;">Duty In</label>
+                            <input type="time" id="start_time_display" class="f-input"
+                                   value="{{ form.start_time.value|default:'' }}"
+                                   oninput="document.getElementById('start_time_input').value=this.value">
+                        </div>
+                        <div style="flex:1;">
+                            <label class="f-label" style="font-weight:500; color:#64748b; margin-bottom:6px; display:block;">Duty Out</label>
+                            <input type="time" id="end_time_display" class="f-input"
+                                   value="{{ form.end_time.value|default:'' }}"
+                                   oninput="document.getElementById('end_time_input').value=this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="f-group">
+                    <label class="f-label">Salary (₹)<span class="required-star">*</span></label>
+                    <input type="number" name="salary" value="{{ form.salary.value|default:'' }}" class="f-input" placeholder="e.g. 25000" required>
+                </div>
+
+                <div class="f-group" style="justify-content:flex-end;">
+                    <label class="urgent-toggle">
+                        <input type="checkbox" name="is_urgent" {% if form.is_urgent.value %}checked{% endif %} style="width:18px; height:18px; cursor:pointer;">
+                        <span style="font-size:13px; font-weight:700; color:#E24B4A;">Mark as Urgent Hiring</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="f-group">
+                <label class="f-label">Job Description / Instructions</label>
+                <textarea name="job_description" class="f-input" placeholder="Detail any specific responsibilities, hospital protocols, or benefits...">{{ form.job_description.value|default:'' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-publish">Create Vacancy Post</button>
+                <a href="{% url 'hospital_posted_vacancies' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function setShift(inTime, outTime, label, btn) {
+    const labelMap = {
+        'Morning Shift':    'morning',
+        'Evening Shift':    'evening',
+        'Night Shift':      'night',
+        'Rotational Shift': 'rotational'
+    };
+    document.getElementById('shift_label_input').value  = labelMap[label] || '';
+    document.getElementById('start_time_input').value   = inTime;
+    document.getElementById('end_time_input').value     = outTime;
+    document.getElementById('start_time_display').value = inTime;
+    document.getElementById('end_time_display').value   = outTime;
+    document.getElementById('selected_shift_label').textContent =
+        inTime ? '✅ ' + label + ' selected' : '🔄 Rotational — fill times manually';
+    document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function toggleQual() {
+    const val = document.getElementById('staff_type_select').value;
+    document.getElementById('doctor_qual').style.display = (val === 'nurse')  ? 'none' : 'flex';
+    document.getElementById('nurse_qual').style.display  = (val === 'doctor') ? 'none' : 'flex';
+}
+
+toggleQual();
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    const label     = document.getElementById('shift_label_input').value;
+    const startTime = document.getElementById('start_time_input').value;
+    const endTime   = document.getElementById('end_time_input').value;
+
+    if (!label) {
+        e.preventDefault();
+        alert('Please select a Shift Time (Morning / Evening / Night / Rotational)');
+        return;
+    }
+    if (!startTime || !endTime) {
+        e.preventDefault();
+        alert('Please fill Duty In and Duty Out times');
+        return;
+    }
+});
+</script>
+
+{% endblock %}

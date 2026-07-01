@@ -1,0 +1,81 @@
+
+{% extends 'admin_panel/base.html' %}
+{% block title %}Cities{% endblock %}
+{% block page_title %}City Management{% endblock %}
+
+{% block content %}
+
+<!-- ADD CITY FORM -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-title">Add New City</div>
+    <form method="POST" action="{% url 'admin_city_add' %}" style="display:flex; gap:10px; flex-wrap:wrap;">
+        {% csrf_token %}
+        <input type="text" name="name" placeholder="City Name (e.g. Mumbai)"
+               class="search-box" style="width:200px;" required>
+        <input type="text" name="state" placeholder="State (e.g. Maharashtra)"
+               class="search-box" style="width:200px;" required>
+        <button type="submit" class="btn btn-primary">+ Add City</button>
+    </form>
+</div>
+
+<!-- FILTER BAR -->
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
+    <form method="GET" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input type="text" name="q" value="{{ query }}"
+               placeholder="Search city..." class="search-box" style="width:180px;">
+        <select name="state" class="search-box" style="width:180px;">
+            <option value="">All States</option>
+            {% for s in states %}
+            <option value="{{ s }}" {% if s == selected_state %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline">Filter</button>
+        <a href="{% url 'admin_city_list' %}" class="btn btn-outline">Reset</a>
+    </form>
+    <span style="font-size:12px; color:#9ca3af; margin-left:auto;">
+        Total: <strong>{{ cities.count }}</strong> cities
+    </span>
+</div>
+
+<!-- CITIES TABLE -->
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>City Name</th>
+                    <th>State</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for city in cities %}
+                <tr>
+                    <td style="color:#9ca3af;">{{ forloop.counter }}</td>
+                    <td><strong>{{ city.name }}</strong></td>
+                    <td>
+                        <span class="badge badge-active">{{ city.state }}</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_city_delete' city.pk %}"
+                           onclick="return confirm('Delete {{ city.name }}?')"
+                           class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <div class="empty-icon">🏙️</div>
+                            <p>No cities found. Add some cities above!</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}Available Shifts - DocShift{% endblock %}
+{% block page_title %}Available Shifts{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    .shift-item {
+        background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 20px; margin-bottom: 16px; position: relative; transition: all 0.15s;
+    }
+    .shift-item:hover { transform: translateY(-2px); border-color: #d1d5db; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+    .shift-item.expired { background: #fafafa; border-color: #f3f4f6; opacity: 0.75; }
+
+    .shift-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .hosp-group { display: flex; flex-direction: column; gap: 2px; }
+    .hosp-name { font-size: 16px; font-weight: 700; color: #111827; line-height: 1.2; }
+    .hosp-loc { font-size: 11px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tag { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tag-urgent  { background: #FCEBEB; color: #E24B4A; border: 1px solid #fecaca; }
+    .tag-qual    { background: #EEEDFE; color: #534AB7; border: 1px solid #dcd7f9; }
+    .tag-ward    { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    .tag-expired { background: #FEF2F2; color: #DC2626; border: 1px solid #fecaca; }
+
+    .info-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px; margin-bottom: 20px; padding-top: 12px; border-top: 1px solid #f9fafb;
+    }
+    .info-box { display: flex; flex-direction: column; gap: 2px; }
+    .info-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; font-weight: 700; }
+    .info-val { font-size: 13px; color: #374151; font-weight: 600; }
+
+    .shift-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        padding-top: 16px; border-top: 1px solid #f3f4f6;
+    }
+    .pay-amount { font-size: 18px; font-weight: 800; color: #1D9E75; }
+
+    .btn-apply {
+        background: #534AB7; color: white; padding: 8px 20px; border-radius: 8px;
+        text-decoration: none; font-size: 13px; font-weight: 700; transition: background 0.2s;
+    }
+    .btn-apply:hover { background: #433a96; }
+
+    .status-applied         { color: #1D9E75; background: #E1F5EE; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .status-expired         { color: #DC2626; background: #FEF2F2; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .status-applied-expired { color: #6b7280; background: #f3f4f6; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+
+    .empty-wrap { text-align: center; padding: 60px 20px; background: #f9fafb; border-radius: 12px; border: 1px dashed #d1d5db; }
+</style>
+
+<div class="dash-wrap">
+    {% if shifts %}
+        {% for shift in shifts %}
+
+        {# expired_ids view se aata hai #}
+        {% if shift.id in expired_ids %}
+        <div class="shift-item expired">
+        {% else %}
+        <div class="shift-item">
+        {% endif %}
+
+            <div class="shift-header">
+                <div class="hosp-group">
+    <span class="hosp-name">{{ shift.hospital_name }}</span>
+    <span class="hosp-loc">{{ shift.city }}{% if shift.area %}, {{ shift.area }}{% endif %}</span>
+    <span style="font-size:10px; color:#9ca3af; margin-top:2px;">🕐 Posted {{ shift.created_at|timesince }} ago</span>
+</div>
+            </div>
+
+            <div class="tag-row">
+                {% if shift.is_urgent %}<span class="tag tag-urgent">Urgent</span>{% endif %}
+                {% if shift.id in expired_ids %}<span class="tag tag-expired">Expired</span>{% endif %}
+                <span class="tag tag-qual">{{ shift.get_qualification_required_display }}</span>
+                <span class="tag tag-ward">{{ shift.get_ward_type_display }}</span>
+            </div>
+{% if shift.location_link %}
+<a href="{{ shift.location_link }}" target="_blank" style="
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: #0fbf8f;
+    text-decoration: none; margin-bottom: 12px;
+    background: #e6faf5; padding: 5px 12px;
+    border-radius: 6px; border: 1px solid rgba(15,191,143,0.2);
+">
+    📍 View Location on Map
+</a>
+{% endif %}
+            <div class="info-grid">
+                <div class="info-box">
+                    <span class="info-label">Shift Date</span>
+                    <span class="info-val">{{ shift.start_date }}{% if shift.end_date %} – {{ shift.end_date }}{% endif %}</span>
+                </div>
+                <div class="info-box">
+                    <span class="info-label">Timing</span>
+                    <span class="info-val">{{ shift.start_time|time:"g:i A" }} - {{ shift.end_time|time:"g:i A" }}</span>
+                </div>
+                <div class="info-box">
+                    <span class="info-label">Shift Type</span>
+                    <span class="info-val">{{ shift.get_shift_type_display }}</span>
+                </div>
+                <div class="info-box">
+                    <span class="info-label">Facility</span>
+                    <span class="info-val">{{ shift.bed_count }} Bed Capacity</span>
+                </div>
+            </div>
+
+            <div class="shift-footer">
+                <div>
+                    <span class="info-label" style="display: block; margin-bottom: 2px;">Estimated Pay</span>
+                    <span class="pay-amount">₹{{ shift.pay }}</span>
+                </div>
+                <div>
+                    {% if shift.id in applied_ids %}
+    {% if shift.id in expired_ids %}
+        <span class="status-applied-expired">✓ Applied &nbsp;·&nbsp; Shift Ended</span>
+    {% else %}
+        <span class="status-applied">✓ Applied Successfully</span>
+    {% endif %}
+
+    <!-- ADD KARO — accepted hone pe number dikhao -->
+    {% for app in request.user.shift_applications.all %}
+        {% if app.shift_id == shift.id %}
+            {% if app.status == 'accepted' %}
+            <div style="margin-top:8px; font-size:12px; font-weight:700; color:#0fbf8f; background:#e6faf5; padding:6px 12px; border-radius:8px; display:inline-block;">
+                📞 {{ shift.posted_by.mobile|default:"Not available" }}
+            </div>
+            {% else %}
+            <div style="margin-top:8px; font-size:12px; color:#9ca3af;">
+                Contact Number Visible after acceptance
+            </div>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+{% elif shift.id in expired_ids %}
+    <span class="status-expired">⛔ Shift Expired</span>
+{% else %}
+    <a href="/{{ request.user.role }}s/shifts/detail/{{ shift.id }}/" class="btn-apply">View Details & Apply</a>
+{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+    {% else %}
+        <div class="empty-wrap">
+            <p style="color:#9ca3af; font-weight: 500;">Currently, there are no shifts available.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

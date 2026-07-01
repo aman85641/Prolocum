@@ -1,0 +1,421 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital – Step 1 | ProLocum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'users/css/register.css' %}">
+    <style>
+.city-dropdown-wrap { position: relative; }
+.city-dropdown-list {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 10px; max-height: 200px; overflow-y: auto;
+    z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 4px;
+}
+.city-dropdown-list .city-item {
+    padding: 10px 14px; font-size: 14px; color: #111827;
+    cursor: pointer; border-bottom: 1px solid #f3f4f6;
+}
+.city-dropdown-list .city-item:hover { background: #f0fdf4; color: #0fbf8f; }
+.city-dropdown-list .city-item:last-child { border-bottom: none; }
+.city-dropdown-list .city-no-result {
+    padding: 10px 14px; font-size: 13px; color: #9ca3af; text-align: center;
+}
+</style>
+
+
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="javascript:history.back()" class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+        </a>
+        <span class="page-title">Hospital Details</span>
+    </div>
+    <div class="topbar-right">
+        {% if progress > 0 %}
+        <span class="progress-label">{{ progress }}%</span>
+        <div class="progress-bar"><div class="progress-fill" style="width:{{ progress }}%"></div></div>
+        {% endif %}
+        <button class="reset-btn" type="button" onclick="resetForm()">RESET</button>
+    </div>
+</div>
+
+<!-- STEP INDICATOR -->
+<div class="step-indicator">
+    <div class="step-item active">
+        <div class="step-dot">1</div>
+        <span>Basic Info</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+        <div class="step-dot">2</div>
+        <span>Specialities</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+        <div class="step-dot">3</div>
+        <span>Documents</span>
+    </div>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+    <form method="POST" id="step1Form" novalidate>
+        {% csrf_token %}
+
+        <!-- CARD 1: Hospital Info -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="card-icon">🏥</div>
+                <div>
+                    <div class="card-title">Hospital Information</div>
+                    <div class="card-sub">Basic details about your hospital</div>
+                </div>
+            </div>
+
+            <div class="input-group" id="grp_hospital_name">
+                <label class="input-label">Hospital Name <span class="req">*</span></label>
+                <input class="input-field" type="text" name="hospital_name"
+                       placeholder="e.g. City General Hospital"
+                       value="{% if profile %}{{ profile.hospital_name }}{% else %}{{ session_data.hospital_name }}{% endif %}">
+                <span class="err-msg" id="err_hospital_name">⚠ Hospital name is required</span>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group" id="grp_hospital_type">
+                    <label class="input-label">Hospital Type <span class="req">*</span></label>
+                    <select class="input-field" name="hospital_type">
+                        <option value="" disabled {% if not profile and not session_data.hospital_type %}selected{% endif %}>Select</option>
+                        <option value="private"    {% if profile.hospital_type == 'private'    or session_data.hospital_type == 'private'    %}selected{% endif %}>Private</option>
+                        <option value="government" {% if profile.hospital_type == 'government' or session_data.hospital_type == 'government' %}selected{% endif %}>Government</option>
+                        <option value="trust"      {% if profile.hospital_type == 'trust'      or session_data.hospital_type == 'trust'      %}selected{% endif %}>Trust / NGO</option>
+                        <option value="clinic"     {% if profile.hospital_type == 'clinic'     or session_data.hospital_type == 'clinic'     %}selected{% endif %}>Clinic</option>
+                    </select>
+                    <span class="err-msg" id="err_hospital_type">⚠ Required</span>
+                </div>
+                <div class="input-group" id="grp_registration_no">
+                    <label class="input-label">Registration No <span class="req">*</span></label>
+                    <input class="input-field" type="text" name="registration_no"
+                           placeholder="REG12345"
+                           value="{% if profile %}{{ profile.registration_no }}{% else %}{{ session_data.registration_no }}{% endif %}">
+                    <span class="err-msg" id="err_registration_no">⚠ Required</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: Contact Details -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="card-icon">📞</div>
+                <div>
+                    <div class="card-title">Contact Details</div>
+                    <div class="card-sub">Who should we reach out to?</div>
+                </div>
+            </div>
+
+            <div class="input-group" id="grp_contact_person">
+                <label class="input-label">Contact Person <span class="req">* (As Per Aadhar)</span></label>
+                <input class="input-field" type="text" name="contact_person"
+                       placeholder="Full Name"
+                       value="{% if profile %}{{ profile.contact_person }}{% else %}{{ session_data.contact_person }}{% endif %}">
+                <span class="err-msg" id="err_contact_person">⚠ Contact person is required</span>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group" id="grp_phone">
+                    <label class="input-label">Phone <span class="req">*</span></label>
+                    <input class="input-field" type="tel" name="phone"
+                           placeholder="+91 98765 43210"
+                           value="{% if profile %}{{ profile.phone }}{% else %}{{ session_data.phone }}{% endif %}">
+                    <span class="err-msg" id="err_phone">⚠ Required</span>
+                </div>
+                <div class="input-group" id="grp_email">
+                    <label class="input-label">Email <span class="req">*</span></label>
+                    <input class="input-field" type="email" name="email"
+                           placeholder="hospital@email.com"
+                           value="{% if profile %}{{ profile.email }}{% else %}{{ session_data.email }}{% endif %}">
+                    <span class="err-msg" id="err_email">⚠ Required</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 3: Address -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="card-icon">📍</div>
+                <div>
+                    <div class="card-title">Address Details</div>
+                    <div class="card-sub">Where is your hospital located?</div>
+                </div>
+            </div>
+
+            <div class="input-group" id="grp_address">
+                <label class="input-label">Full Address <span class="req">*</span></label>
+                <input class="input-field" type="text" name="address"
+                       placeholder="House No, Street, Area"
+                       value="{% if profile %}{{ profile.address }}{% else %}{{ session_data.address }}{% endif %}">
+                <span class="err-msg" id="err_address">⚠ Address is required</span>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group" id="grp_state">
+                    <label class="input-label">State <span class="req">*</span></label>
+                    <input class="input-field" type="text" name="state"
+                           placeholder="Maharashtra"
+                           value="{% if profile %}{{ profile.state }}{% else %}{{ session_data.state }}{% endif %}">
+                    <span class="err-msg" id="err_state">⚠ Required</span>
+                </div>
+                <div class="input-group" id="grp_city">
+    <label class="input-label">City <span class="req">*</span></label>
+    <div class="city-dropdown-wrap">
+        <input class="input-field" type="text" id="city_search"
+               placeholder="Search city..." autocomplete="off"
+               value="{% if profile %}{{ profile.city }}{% else %}{{ session_data.city }}{% endif %}">
+        <input type="hidden" name="city" id="city_hidden"
+               value="{% if profile %}{{ profile.city }}{% else %}{{ session_data.city }}{% endif %}">
+        <div class="city-dropdown-list" id="city_dropdown" style="display:none;"></div>
+    </div>
+    <span class="err-msg" id="err_city">⚠ Required</span>
+</div>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group" id="grp_pincode">
+                    <label class="input-label">Pincode <span class="req">*</span></label>
+                    <input class="input-field" type="text" name="pincode"
+                           placeholder="400001"
+                           value="{% if profile %}{{ profile.pincode }}{% else %}{{ session_data.pincode }}{% endif %}">
+                    <span class="err-msg" id="err_pincode">⚠ Required</span>
+                </div>
+                <div class="input-group" id="grp_bed_count">
+                    <label class="input-label">Total Beds <span class="req">*</span></label>
+                    <input class="input-field" type="number" name="bed_count"
+                           placeholder="150"
+                           value="{% if profile %}{{ profile.bed_count }}{% else %}{{ session_data.bed_count }}{% endif %}">
+                    <span class="err-msg" id="err_bed_count">⚠ Required</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 4: Specialities -->
+        <div class="form-card" id="grp_specialities">
+            <div class="card-header">
+                <div class="card-icon">🩺</div>
+                <div>
+                    <div class="card-title">Specialities <span class="req">*</span></div>
+                    <div class="card-sub">Select all that your hospital offers</div>
+                </div>
+            </div>
+
+            <div class="ward-grid">
+                {% for spec in specialities_list %}
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="{{ spec }}"
+                        {% if spec in profile_specialities %}checked{% endif %}>
+                    <span class="chip-inner">{{ spec }}</span>
+                </label>
+                {% empty %}
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="General Medicine">
+                    <span class="chip-inner">🩺 General Medicine</span>
+                </label>
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="Surgery">
+                    <span class="chip-inner">🔬 Surgery</span>
+                </label>
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="Pediatrics">
+                    <span class="chip-inner">👶 Pediatrics</span>
+                </label>
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="Gynecology">
+                    <span class="chip-inner">🤰 Gynecology</span>
+                </label>
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="Orthopedics">
+                    <span class="chip-inner">🦴 Orthopedics</span>
+                </label>
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="Cardiology">
+                    <span class="chip-inner">❤️ Cardiology</span>
+                </label>
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="Neurology">
+                    <span class="chip-inner">🧠 Neurology</span>
+                </label>
+                <label class="ward-chip">
+                    <input type="checkbox" name="specialities" value="Emergency">
+                    <span class="chip-inner">🚨 Emergency</span>
+                </label>
+                {% endfor %}
+            </div>
+            <span class="err-msg" id="err_specialities" style="display:none; margin-top:8px;">⚠ Please select at least one speciality</span>
+        </div>
+
+        <!-- BOTTOM ACTIONS -->
+        <div class="bottom-bar">
+            <button type="submit" name="action" value="save" class="btn-save">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save
+            </button>
+            <button type="button" class="btn-next" onclick="validateAndNext()">
+                Next Step
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+const REQUIRED = [
+    { name: 'hospital_name',   grp: 'grp_hospital_name',   err: 'err_hospital_name' },
+    { name: 'hospital_type',   grp: 'grp_hospital_type',   err: 'err_hospital_type' },
+    { name: 'registration_no', grp: 'grp_registration_no', err: 'err_registration_no' },
+    { name: 'contact_person',  grp: 'grp_contact_person',  err: 'err_contact_person' },
+    { name: 'phone',           grp: 'grp_phone',           err: 'err_phone' },
+    { name: 'email',           grp: 'grp_email',           err: 'err_email' },
+    { name: 'address',         grp: 'grp_address',         err: 'err_address' },
+    { name: 'state',           grp: 'grp_state',           err: 'err_state' },
+    { name: 'city',            grp: 'grp_city',            err: 'err_city' },
+    { name: 'pincode',         grp: 'grp_pincode',         err: 'err_pincode' },
+    { name: 'bed_count',       grp: 'grp_bed_count',       err: 'err_bed_count' },
+];
+
+function clearErrors() {
+    REQUIRED.forEach(f => {
+        document.getElementById(f.grp)?.classList.remove('has-error');
+        const e = document.getElementById(f.err);
+        if (e) e.style.display = 'none';
+    });
+    document.getElementById('grp_specialities')?.classList.remove('has-error');
+    document.getElementById('err_specialities').style.display = 'none';
+}
+
+function validateAndNext() {
+    clearErrors();
+    let valid = true, first = null;
+
+    REQUIRED.forEach(f => {
+        const el = document.querySelector(`[name="${f.name}"]`);
+        if (!el || !el.value.trim()) {
+            document.getElementById(f.grp)?.classList.add('has-error');
+            const e = document.getElementById(f.err);
+            if (e) e.style.display = 'block';
+            if (!first) first = el || document.getElementById(f.grp);
+            valid = false;
+        }
+    });
+
+    const specs = document.querySelectorAll('input[name="specialities"]:checked');
+    if (specs.length === 0) {
+        document.getElementById('grp_specialities')?.classList.add('has-error');
+        document.getElementById('err_specialities').style.display = 'block';
+        if (!first) first = document.getElementById('grp_specialities');
+        valid = false;
+    }
+
+    if (!valid) {
+        first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    const form = document.getElementById('step1Form');
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'action'; inp.value = 'next';
+    form.appendChild(inp);
+    form.submit();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    REQUIRED.forEach(f => {
+        const el = document.querySelector(`[name="${f.name}"]`);
+        if (!el) return;
+        el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+            if (el.value.trim()) {
+                document.getElementById(f.grp)?.classList.remove('has-error');
+                const e = document.getElementById(f.err);
+                if (e) e.style.display = 'none';
+            }
+        });
+    });
+
+    document.querySelectorAll('input[name="specialities"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (document.querySelectorAll('input[name="specialities"]:checked').length > 0) {
+                document.getElementById('grp_specialities')?.classList.remove('has-error');
+                document.getElementById('err_specialities').style.display = 'none';
+            }
+        });
+    });
+
+    const citySearch   = document.getElementById('city_search');
+    const cityHidden   = document.getElementById('city_hidden');
+    const cityDropdown = document.getElementById('city_dropdown');
+    let cityTimer = null;
+
+    if (citySearch) {
+        citySearch.addEventListener('input', function () {
+            const q = this.value.trim();
+            cityHidden.value = '';
+            clearTimeout(cityTimer);
+            if (q.length < 1) { cityDropdown.style.display = 'none'; return; }
+
+            cityTimer = setTimeout(() => {
+                const state = document.querySelector('[name="state"]')?.value?.trim() || '';
+                fetch(`/adminpanel/get-cities/?q=${encodeURIComponent(q)}&state=${encodeURIComponent(state)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        cityDropdown.innerHTML = '';
+                        if (!data.cities.length) {
+                            cityDropdown.innerHTML = '<div class="city-no-result">No city found</div>';
+                        } else {
+                            data.cities.forEach(c => {
+                                const div = document.createElement('div');
+                                div.className = 'city-item';
+                                div.textContent = `${c.name}, ${c.state}`;
+                                div.addEventListener('click', () => {
+                                    citySearch.value = c.name;
+                                    cityHidden.value = c.name;
+                                    cityDropdown.style.display = 'none';
+                                    document.getElementById('grp_city')?.classList.remove('has-error');
+                                    document.getElementById('err_city').style.display = 'none';
+                                });
+                                cityDropdown.appendChild(div);
+                            });
+                        }
+                        cityDropdown.style.display = 'block';
+                    });
+            }, 300);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.city-dropdown-wrap')) {
+                cityDropdown.style.display = 'none';
+            }
+        });
+    }
+
+});
+function resetForm() {
+    if (!confirm('Reset all fields?')) return;
+    document.querySelectorAll('input:not([type=submit]):not([type=checkbox])').forEach(i => i.value = '');
+    document.querySelectorAll('input[type=checkbox]').forEach(i => i.checked = false);
+    document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    clearErrors();
+}
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+{% extends 'admin_panel/base.html' %}
+{% block title %}Application Detail{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; background: #fdfdfd; }
+    
+    .back-link { 
+        display: inline-flex; align-items: center; gap: 6px;
+        margin-bottom: 24px; color: #6b7280; 
+        text-decoration: none; font-size: 13px; font-weight: 600; 
+    }
+    .back-link:hover { color: #534AB7; }
+
+    .status-banner {
+        padding: 16px; border-radius: 10px;
+        font-weight: 700; font-size: 13px;
+        margin-bottom: 24px; text-align: center;
+        text-transform: uppercase; letter-spacing: 1px;
+        border: 1px solid;
+    }
+    .status-pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+    .status-approved { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .status-rejected { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .detail-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px; }
+    .detail-card.full { grid-column: 1 / -1; }
+    
+    .card-title { 
+        font-size: 11px; font-weight: 700; color: #9ca3af; 
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;
+        border-bottom: 1px solid #f3f4f6; padding-bottom: 10px;
+    }
+
+    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f9fafb; font-size: 14px; }
+    .detail-row:last-child { border: none; }
+    .detail-label { color: #6b7280; font-weight: 500; }
+    .detail-val { color: #111827; font-weight: 600; text-align: right; }
+
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .doc-item { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #f9fafb; }
+    .doc-item img { width: 100%; height: 140px; object-fit: cover; cursor: pointer; display: block; }
+    .doc-label { font-size: 12px; font-weight: 600; color: #374151; padding: 12px; text-align: center; border-top: 1px solid #e5e7eb; }
+
+    .action-bar {
+        display: flex; gap: 16px; margin-top: 32px; padding: 24px;
+        background: #f9fafb; border-radius: 12px; border: 1px dashed #d1d5db;
+    }
+    .btn-action { flex: 1; padding: 14px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; color: white; }
+    .btn-approve { background: #1D9E75; }
+    .btn-reject { background: #E24B4A; }
+
+    @media(max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } .action-bar { flex-direction: column; } }
+</style>
+
+<div class="dash-wrap">
+    <a href="{% url 'admin_applications' %}?role={{ role }}" class="back-link">← Back to {{ role|title }} Applications</a>
+
+    <div class="status-banner status-{{ profile.verification_status }}">
+        {{ profile.verification_status }} Application
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-card">
+            <div class="card-title">Identity Details</div>
+            <div class="detail-row">
+    <span class="detail-label">Name</span>
+    <span class="detail-val">
+        {% if profile.full_name %}
+            {{ profile.full_name }}
+        {% elif profile.hospital_name %}
+            {{ profile.hospital_name }}
+        {% else %}
+            Not Available
+        {% endif %}
+    </span>
+</div>
+            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-val">{{ profile.phone|default:profile.user.mobile }}</span></div>
+{% if profile.email %}
+<div class="detail-row"><span class="detail-label">Email</span><span class="detail-val">{{ profile.email }}</span></div>
+{% endif %}            
+            {% if profile.qualification %}
+            <div class="detail-row"><span class="detail-label">Qualification</span><span class="detail-val">{{ profile.get_qualification_display|upper }}</span></div>
+            {% endif %}
+            
+            {% if profile.registration_no %}
+            <div class="detail-row"><span class="detail-label">Registration No.</span><span class="detail-val">{{ profile.registration_no }}</span></div>
+            {% endif %}
+        </div>
+
+        <div class="detail-card">
+            <div class="card-title">Location & Professional</div>
+            <div class="detail-row"><span class="detail-label">City</span><span class="detail-val">{{ profile.city }}</span></div>
+            <div class="detail-row"><span class="detail-label">State</span><span class="detail-val">{{ profile.state }}</span></div>
+            
+            {% if profile.experience %}
+            <div class="detail-row"><span class="detail-label">Experience</span><span class="detail-val">{{ profile.experience }} Years</span></div>
+            {% endif %}
+            
+            {% if profile.bed_count %}
+            <div class="detail-row"><span class="detail-label">Bed Count</span><span class="detail-val">{{ profile.bed_count }}</span></div>
+            {% endif %}
+        </div>
+
+        {% if specialities_list %}
+<div class="detail-card full">
+    <div class="card-title">Specialities</div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        {% for spec in specialities_list %}
+        <span style="background:#e6faf5; color:#0aa87d; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid rgba(15,191,143,0.2);">
+            {{ spec }}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% if procedures_list %}
+<div class="detail-card full">
+    <div class="card-title">Known Procedures</div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        {% for proc in procedures_list %}
+        <span style="background:#eff6ff; color:#1d4ed8; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid rgba(29,78,216,0.2);">
+            {{ proc }}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if wards_list %}
+<div class="detail-card full">
+    <div class="card-title">Ward Preferences</div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        {% for ward in wards_list %}
+        <span style="background:#fdf4ff; color:#7e22ce; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid rgba(126,34,206,0.2);">
+            {{ ward }}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+        <div class="detail-card full">
+            <div class="card-title">Uploaded Documents</div>
+        <!-- PURANA doc-grid replace karo -->
+<div class="doc-grid">
+    {% if profile.profile_photo %}
+    <div class="doc-item">
+        {% with profile.profile_photo.name as fname %}
+            {% if '.pdf' in fname %}
+                <a href="{{ profile.profile_photo.url }}" target="_blank" 
+                   style="display:flex;align-items:center;justify-content:center;height:140px;font-size:13px;font-weight:700;color:#534AB7;text-decoration:none;">
+                   📄 View PDF
+                </a>
+            {% else %}
+                <img src="{{ profile.profile_photo.url }}" onclick="window.open(this.src)">
+            {% endif %}
+        {% endwith %}
+        <div class="doc-label">Profile Photo</div>
+    </div>
+    {% endif %}
+
+{% if profile.aadhar_photo %}
+<div class="doc-item">
+    {% with profile.aadhar_photo.name as fname %}
+        {% if '.pdf' in fname %}
+            <a href="{{ profile.aadhar_photo.url }}" target="_blank"
+               style="display:flex;align-items:center;justify-content:center;height:140px;font-size:13px;font-weight:700;color:#534AB7;text-decoration:none;">
+               📄 View PDF
+            </a>
+        {% else %}
+            <img src="{{ profile.aadhar_photo.url }}" onclick="window.open(this.src)">
+        {% endif %}
+    {% endwith %}
+    {% if profile.logo %}
+        <div class="doc-label">Aadhar Card (Authorised Person)</div>
+    {% else %}
+        <div class="doc-label">Aadhar Card</div>
+    {% endif %}
+</div>
+{% endif %}
+
+    {% if profile.degree_photo %}
+    <div class="doc-item">
+        {% with profile.degree_photo.name as fname %}
+            {% if '.pdf' in fname %}
+                <a href="{{ profile.degree_photo.url }}" target="_blank"
+                   style="display:flex;align-items:center;justify-content:center;height:140px;font-size:13px;font-weight:700;color:#534AB7;text-decoration:none;">
+                   📄 View PDF
+                </a>
+            {% else %}
+                <img src="{{ profile.degree_photo.url }}" onclick="window.open(this.src)">
+            {% endif %}
+        {% endwith %}
+        <div class="doc-label">Degree Certificate</div>
+    </div>
+    {% endif %}
+
+    {% if profile.pan_card %}
+    <div class="doc-item">
+        {% with profile.pan_card.name as fname %}
+            {% if '.pdf' in fname %}
+                <a href="{{ profile.pan_card.url }}" target="_blank"
+                   style="display:flex;align-items:center;justify-content:center;height:140px;font-size:13px;font-weight:700;color:#534AB7;text-decoration:none;">
+                   📄 View PDF
+                </a>
+            {% else %}
+                <img src="{{ profile.pan_card.url }}" onclick="window.open(this.src)">
+            {% endif %}
+        {% endwith %}
+        <div class="doc-label">PAN Card</div>
+    </div>
+    {% endif %}
+
+    {% if profile.logo %}
+    <div class="doc-item">
+        {% with profile.logo.name as fname %}
+            {% if '.pdf' in fname %}
+                <a href="{{ profile.logo.url }}" target="_blank"
+                   style="display:flex;align-items:center;justify-content:center;height:140px;font-size:13px;font-weight:700;color:#534AB7;text-decoration:none;">
+                   📄 View PDF
+                </a>
+            {% else %}
+                <img src="{{ profile.logo.url }}" onclick="window.open(this.src)">
+            {% endif %}
+        {% endwith %}
+        <div class="doc-label">Hospital Logo</div>
+    </div>
+    {% endif %}
+
+    {% if profile.registration_doc %}
+    <div class="doc-item">
+        {% with profile.registration_doc.name as fname %}
+            {% if '.pdf' in fname %}
+                <a href="{{ profile.registration_doc.url }}" target="_blank"
+                   style="display:flex;align-items:center;justify-content:center;height:140px;font-size:13px;font-weight:700;color:#534AB7;text-decoration:none;">
+                   📄 View PDF
+                </a>
+            {% else %}
+                <img src="{{ profile.registration_doc.url }}" onclick="window.open(this.src)">
+            {% endif %}
+        {% endwith %}
+        <div class="doc-label">Registration Doc</div>
+    </div>
+    {% endif %}
+
+    {% if not profile.profile_photo and not profile.aadhar_photo and not profile.degree_photo and not profile.pan_card and not profile.logo and not profile.registration_doc %}
+    <div style="grid-column: 1/-1; text-align:center; padding:30px; color:#9ca3af; font-size:13px;">
+        No documents uploaded
+    </div>
+    {% endif %}
+</div>
+        </div>
+    </div>
+
+    {% if profile.verification_status == 'pending' %}
+<div class="action-bar">
+    <form method="POST" action="{% url 'admin_verify_application' role profile.id %}" style="flex:1">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="approve">
+        <button type="submit" class="btn-action btn-approve">✓ Approve</button>
+    </form>
+    <form method="POST" action="{% url 'admin_verify_application' role profile.id %}" style="flex:1">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+        <button type="submit" class="btn-action btn-reject">✗ Reject</button>
+    </form>
+    <form method="POST" action="{% url 'admin_verify_application' role profile.id %}" style="flex:1"
+          onsubmit="return confirm('Permanently delete this user & profile?')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn-action" style="background:#6b7280;">🗑 Delete</button>
+    </form>
+</div>
+
+{% elif profile.verification_status == 'rejected' %}
+<div class="action-bar">
+    <form method="POST" action="{% url 'admin_verify_application' role profile.id %}" style="flex:1">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="approve">
+        <button type="submit" class="btn-action btn-approve">✓ Re-Approve</button>
+    </form>
+    <form method="POST" action="{% url 'admin_verify_application' role profile.id %}" style="flex:1"
+          onsubmit="return confirm('Permanently delete this user & profile?')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn-action" style="background:#6b7280;">🗑 Delete</button>
+    </form>
+</div>
+
+{% elif profile.verification_status == 'approved' %}
+<div class="action-bar">
+    <form method="POST" action="{% url 'admin_verify_application' role profile.id %}" style="flex:1">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+        <button type="submit" class="btn-action btn-reject">✗ Revoke Approval</button>
+    </form>
+    <form method="POST" action="{% url 'admin_verify_application' role profile.id %}" style="flex:1"
+          onsubmit="return confirm('Permanently delete this user & profile?')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn-action" style="background:#6b7280;">🗑 Delete</button>
+    </form>
+</div>
+{% endif %}
+</div>
+{% endblock %}

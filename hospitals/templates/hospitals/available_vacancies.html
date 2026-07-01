@@ -1,0 +1,146 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}Available Vacancies{% endblock %}
+{% block page_title %}Available Vacancies{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    /* Vacancy Card Styling */
+    .vacancy-item {
+        background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+        padding: 24px; margin-bottom: 16px; position: relative;
+        transition: all 0.2s ease;
+    }
+    .vacancy-item:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -10px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+
+    .v-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    
+    .hosp-group { display: flex; flex-direction: column; gap: 4px; }
+    .hosp-name { font-size: 18px; font-weight: 800; color: #1e293b; letter-spacing: -0.4px; }
+    .hosp-loc { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
+
+    /* Tags Styling */
+    .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+    .tag { 
+        padding: 4px 12px; border-radius: 6px; font-size: 10px; 
+        font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .tag-urgent { background: #FCEBEB; color: #E24B4A; border: 1px solid #fecaca; }
+    .tag-staff { background: #EEEDFE; color: #534AB7; border: 1px solid #dcd7f9; }
+    .tag-neutral { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+    /* Detail Grid */
+    .detail-grid { 
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+        gap: 16px; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px;
+    }
+    .detail-box { display: flex; flex-direction: column; gap: 2px; }
+    .detail-lbl { font-size: 9px; color: #94a3b8; font-weight: 800; text-transform: uppercase; }
+    .detail-val { font-size: 13px; color: #334155; font-weight: 700; }
+
+    /* Footer: Salary & Action */
+    .v-footer { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding-top: 16px; border-top: 1px solid #f1f5f9; 
+    }
+    .salary-text { font-size: 20px; font-weight: 800; color: #10b981; }
+    
+    .btn-apply {
+        background: #534AB7; color: white; padding: 10px 24px; border-radius: 10px;
+        text-decoration: none; font-size: 13px; font-weight: 700; transition: background 0.2s;
+    }
+    .btn-apply:hover { background: #433a96; }
+    
+    .status-badge { 
+        color: #10b981; background: #E1F5EE; padding: 8px 18px; 
+        border-radius: 10px; font-size: 12px; font-weight: 700; 
+    }
+
+    /* Empty State */
+    .empty-card { text-align: center; padding: 60px 20px; background: #f8fafc; border-radius: 16px; border: 2px dashed #e2e8f0; }
+</style>
+
+<div class="dash-wrap">
+
+    {% if vacancies %}
+        {% for vacancy in vacancies %}
+        <div class="vacancy-item">
+            <div class="v-header">
+                <div class="hosp-group">
+                    <span class="hosp-name">{{ vacancy.hospital_name }}</span>
+                    <span class="hosp-loc">{{ vacancy.city }} • {{ vacancy.get_shift_type_display }}</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="detail-lbl">Monthly Salary</span>
+                    <div class="salary-text">₹{{ vacancy.salary }}</div>
+                </div>
+            </div>
+
+            <div class="tag-row">
+                {% if vacancy.is_urgent %}<span class="tag tag-urgent">Urgent Hiring</span>{% endif %}
+<span class="tag tag-staff">
+    {% if vacancy.doctor_qualification %}
+        {{ vacancy.doctor_qualification }}
+    {% endif %}
+
+    {% if vacancy.doctor_qualification and vacancy.nurse_qualification %}
+        |
+    {% endif %}
+
+    {% if vacancy.nurse_qualification %}
+        {{ vacancy.nurse_qualification }}
+    {% endif %}
+</span>                {% if vacancy.designation %}<span class="tag tag-neutral">{{ vacancy.designation }}</span>{% endif %}
+                {% if vacancy.ward_type %}<span class="tag tag-neutral">{{ vacancy.get_ward_type_display }}</span>{% endif %}
+            </div>
+
+            <div class="detail-grid">
+    <div class="detail-box">
+        <span class="detail-lbl">Joining Date</span>
+        <span class="detail-val">{{ vacancy.start_date|date:"d M, Y"|default:"Not specified" }}</span>
+    </div>
+
+    <div class="detail-box">
+        <span class="detail-lbl">Shift Time</span>
+        <span class="detail-val">
+            {% if vacancy.shift_label == 'morning' %}🌅 Morning
+            {% elif vacancy.shift_label == 'evening' %}🌆 Evening
+            {% elif vacancy.shift_label == 'night' %}🌙 Night
+            {% elif vacancy.shift_label == 'rotational' %}🔄 Rotational
+            {% else %}—
+            {% endif %}
+        </span>
+        <span style="font-size:11px; color:#94a3b8; font-weight:600;">
+            {{ vacancy.start_time|time:"g:i A" }} – {{ vacancy.end_time|time:"g:i A" }}
+        </span>
+    </div>
+
+    <div class="detail-box">
+        <span class="detail-lbl">Last Date of Application</span>
+        <span class="detail-val">{{ vacancy.end_date|date:"d M, Y"|default:"Open" }}</span>
+    </div>
+</div>
+
+            <div class="v-footer">
+                <div style="color: #94a3b8; font-size: 12px; font-weight: 500;">
+                    Posted {{ vacancy.created_at|timesince }} ago
+                </div>
+                <div class="v-actions">
+                    {% if vacancy.id in applied_ids %}
+                        <span class="status-badge">Application Sent</span>
+                    {% else %}
+                        <a href="{% url 'vacancy_detail' vacancy.id %}" class="btn-apply">View & Apply Now</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-card">
+            <p style="color:#94a3b8; font-weight: 600; font-size: 15px;">No active vacancies found at the moment.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

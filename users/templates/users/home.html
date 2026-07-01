@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProLocum - Home</title>
+    <link rel="stylesheet" href="home.css">
+
+<link rel="stylesheet" href="{% static 'users/css/home.css' %}">
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#0056b3">
+</head>
+<body>
+
+<div class="card">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+        <div class="logo-icon">
+            <img src="{% static 'users/images/Black_and_White_Circular_Art___Design_Logo-removebg-preview.png' %}" alt="logo">
+        </div>
+        <div class="logo-name">Pro<span>Locum</span></div>
+    </div>
+
+    <!-- Role Selector Label -->
+    <p class="iam-label">I am a</p>
+
+    <!-- Doctor Button (active/selected by default) -->
+<a href="{% url 'doctor_type' %}" class="role-btn active">
+        <!-- <span class="btn-icon">🩺</span> -->
+        <span class="btn-label">Doctor</span>
+        <div class="btn-arrow">→</div>
+    </a>
+
+    <!-- Nurse Button -->
+    <a href="{% url 'login' 'nurse' %}" class="role-btn">
+        <!-- <span class="btn-icon">💉</span> -->
+        <span class="btn-label">Nurse</span>
+        <div class="btn-arrow">→</div>
+    </a>
+
+    <!-- Hospital Button -->
+    <a href="{% url 'login' 'hospital' %}" class="role-btn">
+        <!-- <span class="btn-icon">🏥</span> -->
+        <span class="btn-label">Hospital</span>
+        <div class="btn-arrow">→</div>
+    </a>
+
+    <!-- Admin -->
+<a href="{% url 'login' 'admin' %}" class="admin-link">⚙ Admin Login</a>
+
+    <!-- Tagline -->
+    <p class="footer-tag">The Bridge to Uninterrupted Care</p>
+
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register("{% url 'serviceworker' %}").then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+    }
+</script>
+</body>
+</html>

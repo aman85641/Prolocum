@@ -1,0 +1,235 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}Shift Details{% endblock %}
+{% block page_title %}Shift Details{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; display: flex; justify-content: center; }
+    
+    .detail-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+        padding: 32px; width: 100%; max-width: 650px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Header Section */
+    .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+    .hosp-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    
+    .tag-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { 
+        padding: 4px 12px; border-radius: 6px; font-size: 10px; 
+        font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .tag-urgent { background: #FCEBEB; color: #E24B4A; }
+    .tag-qual { background: #EEEDFE; color: #534AB7; }
+
+    .pay-highlight { font-size: 24px; font-weight: 800; color: #10b981; }
+
+    /* Info Table Styling */
+    .info-table { width: 100%; border-collapse: collapse; margin: 24px 0; }
+    .info-table td { padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 14.5px; }
+    .info-table tr:last-child td { border-bottom: none; }
+    .label-col { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 11px; width: 140px; letter-spacing: 0.5px; }
+    .val-col { color: #334155; font-weight: 600; }
+
+    /* Requirements Box */
+    .req-box {
+        background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+        padding: 20px; margin-bottom: 28px;
+    }
+    .req-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; display: block; }
+    .req-item { font-size: 14px; color: #475569; padding: 4px 0; display: flex; gap: 10px; }
+
+    /* Action Buttons */
+    .btn-apply {
+        width: 100%; padding: 14px; border-radius: 10px; background: #534AB7;
+        color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer;
+        transition: all 0.2s; margin-bottom: 12px;
+    }
+    .btn-apply:hover { background: #433a96; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(83, 74, 183, 0.2); }
+    
+    .btn-map {
+        width: 100%; padding: 12px; border-radius: 10px; background: white;
+        color: #64748b; border: 1px solid #e2e8f0; font-size: 14px; font-weight: 600;
+        text-decoration: none; display: flex; justify-content: center; transition: all 0.2s;
+    }
+    .btn-map:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .status-alert {
+        background: #E1F5EE; color: #1D9E75; padding: 16px; border-radius: 10px;
+        text-align: center; font-weight: 700; font-size: 14px; margin-bottom: 12px;
+    }
+
+    @media(max-width: 640px) {
+        .detail-card { padding: 20px; border-radius: 0; border: none; }
+        .detail-header { flex-direction: column; gap: 16px; }
+        .label-col { width: 100px; }
+    }
+</style>
+
+<div class="dash-wrap">
+    <div class="detail-card">
+        <div class="detail-header">
+            <div>
+                <h2 class="hosp-title">{{ shift.hospital_name }}</h2>
+                <div class="tag-row">
+                    <span class="tag tag-qual">{{ shift.get_qualification_required_display }}</span>
+                    {% if shift.is_urgent %}<span class="tag tag-urgent">Urgent Priority</span>{% endif %}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Payout</div>
+                <span class="pay-highlight">₹{{ shift.pay }}</span>
+            </div>
+        </div>
+
+        <table class="info-table">
+            <tr>
+                <td class="label-col">Ward Details</td>
+                <td class="val-col">{{ shift.get_ward_type_display }} · {{ shift.bed_count }} Bed Capacity</td>
+            </tr>
+            <tr>
+                <td class="label-col">Timing</td>
+                <td class="val-col">{{ shift.start_time|time:"g:i A" }} – {{ shift.end_time|time:"g:i A" }}</td>
+            </tr>
+            <tr>
+                <td class="label-col">Date Range</td>
+                <td class="val-col">{{ shift.start_date }}{% if shift.end_date %} to {{ shift.end_date }}{% endif %}</td>
+            </tr>
+            <tr>
+                <td class="label-col">Shift Type</td>
+                <td class="val-col">{{ shift.get_shift_type_display }}</td>
+            </tr>
+            <tr>
+                <td class="label-col">Area / City</td>
+                <td class="val-col">{{ shift.area }}{% if shift.area %}, {% endif %}{{ shift.city }}</td>
+            </tr>
+            <tr>
+                <td class="label-col">Full Address</td>
+                <td class="val-col">{{ shift.address }}</td>
+            </tr>
+            {% if shift.landmark %}
+            <tr>
+                <td class="label-col">Landmark</td>
+                <td class="val-col">{{ shift.landmark }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+    <td class="label-col">Hospital Contact</td>
+            <tr>
+    <td class="label-col">Hospital Contact</td>
+    <td class="val-col">
+        {% if already_applied and already_applied.status == 'accepted' %}
+            <span style="color:#0fbf8f; font-weight:800;"> {{ shift.posted_by.mobile|default:"Not available" }}</span>
+        {% else %}
+            <span style="color:#9ca3af; font-size:12px;"> Available after acceptance</span>
+        {% endif %}
+    </td>
+</tr>
+        </table>
+
+        {% if shift.requirements %}
+        <div class="req-box">
+            <span class="req-title">Important Instructions</span>
+            {% for req in shift.get_requirements_list %}
+                <div class="req-item">
+                    <span style="color: #534AB7;">•</span>
+                    <span>{{ req }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if already_applied %}
+
+    {% if already_applied.status == 'withdrawn' %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reapply">
+            <button type="submit" class="btn-apply">↩ Re-Apply for this Shift</button>
+        </form>
+
+    {% elif already_applied.status == 'accepted' %}
+        <div class="status-alert">✅ Application Accepted</div>
+
+        {% if already_applied.shift.is_urgent %}
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;
+                        padding:12px;text-align:center;font-size:12px;
+                        color:#dc2626;font-weight:600;margin-bottom:12px;">
+                🚨 Urgent shift — withdrawal not allowed
+            </div>
+
+        {% elif can_withdraw %}
+            <form method="post" action="{% url 'withdraw_application' already_applied.id %}">
+                {% csrf_token %}
+                <button type="submit"
+                    style="width:100%;padding:13px;border-radius:10px;background:#ef4444;
+                           color:white;border:none;font-size:14px;font-weight:700;
+                           cursor:pointer;margin-bottom:8px;"
+                    onclick="return confirm('Withdraw karna chahte ho?')">
+                    Withdraw Application
+                </button>
+            </form>
+            <p style="font-size:11px;color:#9ca3af;text-align:center;">
+                ⏱ Window closes in <strong id="withdraw-timer"></strong>
+            </p>
+
+        {% else %}
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;
+                        padding:12px;text-align:center;font-size:12px;
+                        color:#92400e;font-weight:600;margin-bottom:12px;">
+                ⚠️ Withdrawal window has passed (30 min limit)
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="status-alert">
+            Application Received • Status: {{ already_applied.get_status_display }}
+        </div>
+    {% endif %}
+
+{% else %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="apply">
+        <button type="submit" class="btn-apply">Confirm & Apply for Shift</button>
+    </form>
+{% endif %}
+
+<!-- Countdown Timer -->
+{% if can_withdraw and already_applied.accepted_at %}
+<script>
+(function() {
+    var accepted = new Date("{{ already_applied.accepted_at|date:'c' }}");
+    var deadline = new Date(accepted.getTime() + 30 * 60 * 1000);
+    function tick() {
+        var left = deadline - new Date();
+        if (left <= 0) {
+            var el = document.getElementById('withdraw-timer');
+            if (el) el.closest('p').innerHTML = '<span style="color:#ef4444">Window expired — refresh page</span>';
+            return;
+        }
+        var m = Math.floor(left / 60000);
+        var s = Math.floor((left % 60000) / 1000);
+        var el = document.getElementById('withdraw-timer');
+        if (el) el.textContent = m + 'm ' + s + 's';
+        setTimeout(tick, 1000);
+    }
+    tick();
+})();
+</script>
+{% endif %}
+
+        {% if shift.location_link %}
+<a href="{{ shift.location_link }}" target="_blank" class="btn-map">
+    📍 View Location on Map
+</a>
+{% else %}
+<a href="https://www.google.com/maps/search/?api=1&query={{ shift.address|urlencode }}+{{ shift.city|urlencode }}" target="_blank" class="btn-map">
+    📍 Open in Google Maps
+</a>
+{% endif %}
+    </div>
+</div>
+{% endblock %}

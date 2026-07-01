@@ -1,0 +1,247 @@
+/* ===========================
+   MedBridge — home.css
+   =========================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg:           #f0f4f8;
+    --surface:      #ffffff;
+    --border:       #e2eaec;
+    --teal-500:     #0fbf8f;
+    --teal-600:     #0aa87d;
+    --teal-light:   #e6faf5;
+    --navy:         #1a2342;
+    --navy-mid:     #2e3a5e;
+    --muted:        #8899a8;
+    --muted-light:  #b0bec5;
+    --font-display: 'Sora', sans-serif;
+    --font-body:    'Plus Jakarta Sans', sans-serif;
+    --radius-card:  22px;
+    --radius-btn:   14px;
+    --shadow-card:  0 8px 40px rgba(26,35,66,0.07);
+    --shadow-btn:   0 4px 18px rgba(15,191,143,0.22);
+    --transition:   all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;      /* ✅ yahi center karta hai vertically */
+    justify-content: center;  /* ✅ yahi center karta hai horizontally */
+    padding: 16px;
+}
+body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+body::before {
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, #0fbf8f33 0%, transparent 70%);
+    top: -120px; right: -100px;
+}
+body::after {
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #1a234222 0%, transparent 70%);
+    bottom: -80px; left: -80px;
+}
+
+/* ---------- Card ---------- */
+.card {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 40px 32px 36px;
+    /* ✅ width fix: max-width + 100% for mobile */
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    animation: fadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Logo ---------- */
+.logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 28px;
+    animation: fadeUp 0.65s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.logo-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #e6faf5 0%, #d0f5ea 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(15,191,143,0.15);
+    overflow: hidden; /* ✅ image bahar na jaaye */
+}
+
+/* ✅ Logo image properly fit hogi */
+.logo-icon img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    display: block;
+}
+
+.logo-name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--navy);
+}
+.logo-name span { color: var(--teal-500); }
+
+/* ---------- Label ---------- */
+.iam-label {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted-light);
+    margin-bottom: 20px;
+    animation: fadeUp 0.65s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- Role Buttons ---------- */
+.role-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    /* ✅ fixed padding — pehle 100px tha jo galat tha */
+    padding: 15px 20px;
+    margin-bottom: 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-btn);
+    color: var(--navy-mid);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.role-btn:last-of-type { margin-bottom: 0; }
+
+.role-btn:hover {
+    border-color: var(--teal-500);
+    background: var(--teal-light);
+    color: var(--teal-600);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(15,191,143,0.12);
+}
+
+.role-btn.active {
+    background: var(--teal-500);
+    border-color: var(--teal-500);
+    color: #ffffff;
+    box-shadow: var(--shadow-btn);
+}
+.role-btn.active:hover {
+    background: var(--teal-600);
+    border-color: var(--teal-600);
+}
+
+.btn-label { flex: 1; text-align: center; }
+
+.btn-arrow {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(26,35,66,0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+.role-btn.active .btn-arrow { background: rgba(255,255,255,0.25); color: #fff; }
+.role-btn:hover .btn-arrow  { transform: translateX(3px); }
+
+.role-btn:nth-child(1) { animation: fadeUp 0.65s 0.22s cubic-bezier(0.22,1,0.36,1) both; }
+.role-btn:nth-child(2) { animation: fadeUp 0.65s 0.30s cubic-bezier(0.22,1,0.36,1) both; }
+.role-btn:nth-child(3) { animation: fadeUp 0.65s 0.38s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ---------- Admin & Footer ---------- */
+.admin-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--muted-light);
+    font-size: 0.74rem;
+    font-family: var(--font-body);
+    letter-spacing: 0.8px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    animation: fadeUp 0.65s 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.admin-link:hover { color: var(--muted); }
+
+.footer-tag {
+    margin-top: 24px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    color: var(--navy);
+    animation: fadeUp 0.65s 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.card {
+    margin: auto;
+}
+/* ---------- Mobile Responsive ---------- */
+@media (max-width: 480px) {
+    body {
+        padding: 12px;
+        /* align-items: flex-start; */
+        /* padding-top: 40px; */
+    }
+    .card {
+        padding: 32px 20px 28px;
+        border-radius: 18px;
+    }
+    .logo-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+    }
+    .logo-icon img {
+        width: 46px;
+        height: 46px;
+    }
+    .logo-name { font-size: 1.35rem; }
+    .role-btn  { padding: 14px 16px; font-size: 0.9rem; margin-bottom: 12px; }
+    .btn-arrow { width: 26px; height: 26px; font-size: 0.76rem; }
+    .iam-label { margin-bottom: 16px; }
+}

@@ -1,0 +1,649 @@
+{% extends 'admin_panel/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  * {
+    box-sizing: border-box
+  }
+
+  .dash-wrap {
+    padding: 4px 0 32px
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px
+  }
+
+  .top-bar-left {}
+
+  .top-bar-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0
+  }
+
+  .top-bar-sub {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-top: 3px
+  }
+
+  .admin-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #534AB7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #EEEDFE;
+    flex-shrink: 0
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 12px
+  }
+
+  .section-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0
+  }
+
+  .si-purple {
+    background: #EEEDFE
+  }
+
+  .si-teal {
+    background: #E1F5EE
+  }
+
+  .si-amber {
+    background: #FAEEDA
+  }
+
+  .si-red {
+    background: #FCEBEB
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .6px
+  }
+
+  .stats-grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 4px
+  }
+
+  .g-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr))
+  }
+
+  .g-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr))
+  }
+
+  .g-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+  }
+
+  .scard {
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: background .15s
+  }
+
+  .scard:hover {
+    background: #f3f4f6
+  }
+
+  .scard-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 3px 0 0 3px
+  }
+
+  .bar-purple {
+    background: #7F77DD
+  }
+
+  .bar-teal {
+    background: #1D9E75
+  }
+
+  .bar-amber {
+    background: #BA7517
+  }
+
+  .bar-red {
+    background: #E24B4A
+  }
+
+  .scard-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    margin-bottom: 7px
+  }
+
+  .scard-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1
+  }
+
+  .scard-sub {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 5px
+  }
+
+  .scard-sub.up {
+    color: #3B6D11
+  }
+
+  .alert-card {
+    background: #fff;
+    border: 1px solid #fee2e2;
+    border-left: 4px solid #ef4444;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 8px
+  }
+
+  .alert-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px
+  }
+
+  .alert-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    flex-shrink: 0
+  }
+
+  .alert-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827
+  }
+
+  .pill-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 99px;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: opacity .15s
+  }
+
+  .pill:hover {
+    opacity: .85
+  }
+
+  .pill-warn {
+    background: #FAEEDA;
+    color: #633806
+  }
+
+  .reg-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-top: 8px;
+    overflow: hidden
+  }
+
+  .reg-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid #f3f4f6
+  }
+
+  .reg-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827
+  }
+
+  .reg-card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 3px 10px;
+    border-radius: 99px
+  }
+
+  /* Desktop table */
+  .desktop-table {
+    width: 100%
+  }
+
+  .desktop-table table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed
+  }
+
+  .desktop-table th {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 11px 18px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap
+  }
+
+  .desktop-table td {
+    padding: 13px 18px;
+    font-size: 13px;
+    color: #111827;
+    border-bottom: 1px solid #f9fafb;
+    vertical-align: middle
+  }
+
+  .desktop-table tr:last-child td {
+    border-bottom: none
+  }
+
+  .desktop-table tbody tr:hover td {
+    background: #fafafa
+  }
+
+  .td-name {
+    font-weight: 600 !important
+  }
+
+  .td-role {
+    font-size: 12px !important;
+    color: #6b7280 !important;
+    text-transform: capitalize
+  }
+
+  /* Status badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 99px;
+    white-space: nowrap
+  }
+
+  .badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0
+  }
+
+  .badge-pending {
+    background: #FAEEDA;
+    color: #633806
+  }
+
+  .badge-pending::before {
+    background: #BA7517
+  }
+
+  .badge-approved {
+    background: #EAF3DE;
+    color: #27500A
+  }
+
+  .badge-approved::before {
+    background: #3B6D11
+  }
+
+  .badge-rejected {
+    background: #FCEBEB;
+    color: #791F1F
+  }
+
+  .badge-rejected::before {
+    background: #A32D2D
+  }
+
+  .view-btn {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .15s
+  }
+
+  .view-btn:hover {
+    background: #f9fafb;
+    border-color: #d1d5db
+  }
+
+  /* Mobile cards */
+  .mobile-cards {
+    display: none
+  }
+
+  .mob-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6
+  }
+
+  .mob-item:last-child {
+    border-bottom: none
+  }
+
+  .mob-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 5px
+  }
+
+  .mob-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827
+  }
+
+  .mob-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 11px
+  }
+
+  .mob-role {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: capitalize
+  }
+
+  .mob-sep {
+    font-size: 10px;
+    color: #d1d5db
+  }
+
+  .mob-date {
+    font-size: 11px;
+    color: #9ca3af
+  }
+
+  @media(max-width:640px) {
+    .g-5 {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .g-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .g-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .desktop-table {
+      display: none
+    }
+
+    .mobile-cards {
+      display: block
+    }
+
+    .top-bar-title {
+      font-size: 18px
+    }
+  }
+
+  @media(max-width:400px) {
+
+    .g-5,
+    .g-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+  }
+</style>
+
+<div class="dash-wrap">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="top-bar-title">Dashboard</div>
+      <div class="top-bar-sub">Welcome back, Admin</div>
+    </div>
+    <div class="admin-avatar">AD</div>
+  </div>
+
+  <!-- Users Section -->
+  <div class="section-header">
+    <!-- <div class="section-icon si-purple">👥</div> -->
+    <span class="section-label">Users</span>
+  </div>
+  <div class="stats-grid g-5">
+    <div class="scard">
+      <div class="scard-bar bar-purple"></div>
+      <div class="scard-label">Total Users</div>
+      <div class="scard-value">{{ total_users }}</div>
+      <div class="scard-sub">All registered</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-purple"></div>
+      <div class="scard-label">Doctors</div>
+      <div class="scard-value">{{ total_doctors }}</div>
+      <div class="scard-sub">Registered</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-purple"></div>
+      <div class="scard-label">Nurses</div>
+      <div class="scard-value">{{ total_nurses }}</div>
+      <div class="scard-sub">Registered</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-purple"></div>
+      <div class="scard-label">Hospitals</div>
+      <div class="scard-value">{{ total_hospitals }}</div>
+      <div class="scard-sub">Registered</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-teal"></div>
+      <div class="scard-label">Approved</div>
+      <div class="scard-value">{{ total_approved }}</div>
+      <div class="scard-sub up">Verified</div>
+    </div>
+  </div>
+
+  <!-- Shifts Section -->
+  <div class="section-header">
+    <!-- <div class="section-icon si-teal">🕐</div> -->
+    <span class="section-label">Shifts</span>
+  </div>
+  <div class="stats-grid g-4">
+    <div class="scard">
+      <div class="scard-bar bar-purple"></div>
+      <div class="scard-label">Total Shifts</div>
+      <div class="scard-value">{{ total_shifts }}</div>
+      <div class="scard-sub">All time</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-teal"></div>
+      <div class="scard-label">Active</div>
+      <div class="scard-value">{{ active_shifts }}</div>
+      <div class="scard-sub up">Live now</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-purple"></div>
+      <div class="scard-label">Applications</div>
+      <div class="scard-value">{{ total_applications }}</div>
+      <div class="scard-sub">Total</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-teal"></div>
+      <div class="scard-label">Completed</div>
+      <div class="scard-value">{{ completed_shifts }}</div>
+      <div class="scard-sub up">Done</div>
+    </div>
+  </div>
+
+  <!-- Vacancies Section -->
+  <div class="section-header">
+    <!-- <div class="section-icon si-amber">📋</div> -->
+    <span class="section-label">Vacancies</span>
+  </div>
+  <div class="stats-grid g-2" style="max-width:340px">
+    <div class="scard">
+      <div class="scard-bar bar-amber"></div>
+      <div class="scard-label">Total Vacancies</div>
+      <div class="scard-value">{{ total_vacancies }}</div>
+      <div class="scard-sub">Open</div>
+    </div>
+    <div class="scard">
+      <div class="scard-bar bar-amber"></div>
+      <div class="scard-label">Applications</div>
+      <div class="scard-value">{{ total_vac_apps }}</div>
+      <div class="scard-sub">Received</div>
+    </div>
+  </div>
+
+  <!-- Pending Verifications -->
+  {% if pending_doctors or pending_nurses or pending_hospitals %}
+  <div class="alert-card" style="margin-top:24px">
+    <div class="alert-top">
+      <div class="alert-dot"></div>
+      <div class="alert-title">Pending Verifications</div>
+    </div>
+    <div class="pill-row">
+      {% if pending_doctors %}
+      <a href="{% url 'admin_applications' %}?role=doctor&status=pending" class="pill pill-warn">
+        🩺 {{ pending_doctors }} Doctors
+      </a>
+      {% endif %}
+      {% if pending_nurses %}
+      <a href="{% url 'admin_applications' %}?role=nurse&status=pending" class="pill pill-warn">
+        💉 {{ pending_nurses }} Nurses
+      </a>
+      {% endif %}
+      {% if pending_hospitals %}
+      <a href="{% url 'admin_applications' %}?role=hospital&status=pending" class="pill pill-warn">
+        🏥 {{ pending_hospitals }} Hospitals
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recent Registrations -->
+  <div class="reg-card" style="margin-top:24px">
+    <div class="reg-card-head">
+      <span class="reg-card-title">🕐 Recent Registrations</span>
+      <span class="reg-card-badge">Latest</span>
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="desktop-table">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:30%">Name</th>
+            <th style="width:16%">Role</th>
+            <th style="width:18%">Status</th>
+            <th style="width:20%">Date</th>
+            <th style="width:16%"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recent_applications %}
+          <tr>
+            <td class="td-name">{{ item.name }}</td>
+            <td class="td-role">{{ item.role }}</td>
+            <td><span class="badge badge-{{ item.status }}">{{ item.status|title }}</span></td>
+            <td style="color:#9ca3af;font-size:12px">{{ item.created_at|date:"d M Y" }}</td>
+            <td>
+              <a href="{% url 'admin_application_detail' item.role item.id %}" class="view-btn">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Cards -->
+    <div class="mobile-cards">
+      {% for item in recent_applications %}
+      <div class="mob-item">
+        <div class="mob-top">
+          <span class="mob-name">{{ item.name }}</span>
+          <span class="badge badge-{{ item.status }}">{{ item.status|title }}</span>
+        </div>
+        <div class="mob-meta">
+          <span class="mob-role">{{ item.role }}</span>
+          <span class="mob-sep">•</span>
+          <span class="mob-date">{{ item.created_at|date:"d M Y" }}</span>
+        </div>
+        <a href="{% url 'admin_application_detail' item.role item.id %}" class="view-btn">View details</a>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

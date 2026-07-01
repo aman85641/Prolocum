@@ -1,0 +1,184 @@
+{% extends 'doctors/base.html' %}
+{% block title %}My Wallet{% endblock %}
+{% block page_title %}Wallet & Tokens{% endblock %}
+
+{% block content %}
+<style>
+.dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+.wallet-hero {
+    background: #2971F0; border-radius: 20px;
+    padding: 32px; margin-bottom: 24px;
+    position: relative; overflow: hidden;
+}
+.wallet-hero::before {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: rgba(15,191,143,0.1);
+    border-radius: 50%;
+}
+.wallet-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.wallet-balance { font-size: 48px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 6px; }
+.wallet-sub { font-size: 13px; color: rgba(255,255,255,0.4); }
+
+.stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px; margin-bottom: 24px;
+}
+.stat-card {
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 16px; padding: 20px;
+}
+.stat-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.stat-value { font-size: 24px; font-weight: 800; color: #1e293b; }
+.stat-sub   { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+.history-card {
+    background: white; border: 1px solid #e5e7eb;
+    border-radius: 20px; overflow: hidden;
+}
+.history-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px; border-bottom: 1px solid #f3f4f6;
+}
+.history-title { font-size: 15px; font-weight: 800; color: #111827; }
+
+.tx-table { width: 100%; border-collapse: collapse; }
+.tx-table thead tr { background: #f9fafb; }
+.tx-table thead th {
+    padding: 12px 24px; font-size: 10px; font-weight: 800;
+    color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px;
+    text-align: left; border-bottom: 1px solid #f3f4f6;
+}
+.tx-table tbody tr { border-bottom: 1px solid #f9fafb; transition: background 0.12s; }
+.tx-table tbody tr:last-child { border-bottom: none; }
+.tx-table tbody tr:hover { background: #fafafa; }
+.tx-table tbody td { padding: 14px 24px; font-size: 13px; color: #374151; vertical-align: middle; }
+
+.tx-type { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.tx-type-credit { background: #E1F5EE; color: #0F6E56; }
+.tx-type-debit  { background: #fef2f2; color: #dc2626; }
+.tx-type-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; }
+.tx-type-credit .tx-type-icon { background: #0fbf8f; color: #fff; }
+.tx-type-debit  .tx-type-icon { background: #ef4444; color: #fff; }
+
+.tx-amount-credit { font-size: 14px; font-weight: 800; color: #0fbf8f; }
+.tx-amount-debit  { font-size: 14px; font-weight: 800; color: #ef4444; }
+.tx-note { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6b7280; font-size: 12px; }
+.tx-date { color: #9ca3af; font-size: 11px; }
+
+.tx-empty { text-align: center; padding: 60px 24px; color: #9ca3af; }
+.tx-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+
+@media(max-width: 640px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .tx-table thead th, .tx-table tbody td { padding: 10px 12px; font-size: 11px; }
+    .tx-note { max-width: 120px; }
+}
+</style>
+
+<div class="dash-wrap">
+
+    <!-- Wallet Hero -->
+    <div class="wallet-hero">
+        <div class="wallet-label">Available Tokens</div>
+        <div class="wallet-balance">{{ wallet_balance }}</div>
+        <div class="wallet-sub">Tokens are deducted when shift application is accepted</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Credited</div>
+            <div class="stat-value" style="color:#0fbf8f;">
+                {{ wallet_transactions|length }}
+            </div>
+            <div class="stat-sub">All time transactions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Tokens Used</div>
+            <div class="stat-value" style="color:#ef4444;">
+                {% with total=0 %}
+                {% for tx in wallet_transactions %}
+                    {% if tx.transaction_type == 'debit' %}
+                    {% endif %}
+                {% endfor %}
+                {% endwith %}
+                —
+            </div>
+            <div class="stat-sub">Applied in shifts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Current Balance</div>
+            <div class="stat-value" style="color:#534AB7;">{{ wallet_balance }}</div>
+            <div class="stat-sub">Available tokens</div>
+        </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="history-card">
+        <div class="history-header">
+            <div class="history-title">Transaction History</div>
+            <span style="background:#e6faf5; color:#0aa87d; font-size:10px; font-weight:700; padding:4px 12px; border-radius:20px;">
+                {{ wallet_transactions|length }} Records
+            </span>
+        </div>
+
+        {% if wallet_transactions %}
+        <div style="overflow-x:auto;">
+            <table class="tx-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Date & Time</th>
+                        <th style="text-align:right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in wallet_transactions %}
+                    <tr>
+                        <td style="color:#d1d5db; font-size:11px; font-weight:700;">{{ forloop.counter }}</td>
+                        <td>
+                            {% if tx.transaction_type == 'credit' %}
+                            <div class="tx-type tx-type-credit">
+                                <div class="tx-type-icon">+</div> Credit
+                            </div>
+                            {% else %}
+                            <div class="tx-type tx-type-debit">
+                                <div class="tx-type-icon">−</div> Debit
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td><div class="tx-note" title="{{ tx.note }}">{{ tx.note|default:"—" }}</div></td>
+                        <td>
+                            <div class="tx-date">
+                                {{ tx.created_at|date:"d M Y" }}<br>
+                                <span style="color:#d1d5db;">{{ tx.created_at|time:"g:i A" }}</span>
+                            </div>
+                        </td>
+                        <td style="text-align:right;">
+                            {% if tx.transaction_type == 'credit' %}
+                            <span class="tx-amount-credit">+ {{ tx.amount }}</span>
+                            {% else %}
+                            <span class="tx-amount-debit">− {{ tx.amount }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="tx-empty">
+            <div class="tx-empty-icon">🪙</div>
+            <div style="font-weight:700; color:#6b7280; margin-bottom:4px;">No transactions yet</div>
+            <div>Token activity yahan dikhega jab plan purchase karoge.</div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,375 @@
+{% extends 'hospitals/base.html' %}
+{% block title %}Vacancy Applicants{% endblock %}
+{% block page_title %}Vacancy Applicants{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap {
+        padding: 4px 0 32px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Vacancy Header - Enhanced */
+    .vacancy-header {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .v-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .v-meta {
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 32px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .stat-val {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1;
+    }
+
+    .stat-lbl {
+        font-size: 10px;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        margin-top: 6px;
+    }
+
+    /* Modern Filter Tabs */
+    .filter-pills {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+        padding: 4px;
+        background: #f1f5f9;
+        border-radius: 12px;
+        width: fit-content;
+    }
+
+    .atab {
+        padding: 8px 18px;
+        border-radius: 9px;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: 0.2s;
+    }
+
+    .atab.active-tab {
+        background: white;
+        color: #534AB7;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Applicant Card - Refined */
+    .acard {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 12px;
+        transition: 0.2s;
+    }
+
+    .acard:hover {
+        border-color: #534AB7;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #EEEDFE;
+        color: #534AB7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 18px;
+    }
+
+    .user-name {
+        font-size: 16px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .user-meta {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    /* Status Badges - Admin Style */
+    .badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-applied {
+        background: #EEEDFE;
+        color: #534AB7;
+    }
+
+    .badge-accepted {
+        background: #E1F5EE;
+        color: #1D9E75;
+    }
+
+    .badge-rejected {
+        background: #FCEBEB;
+        color: #E24B4A;
+    }
+
+    /* Action Buttons */
+    .btn-sm {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #475569;
+        transition: 0.2s;
+    }
+
+    .btn-sm:hover {
+        border-color: #534AB7;
+        color: #534AB7;
+        background: #fdfdff;
+    }
+
+    /* Overlays */
+    .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(6px);
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .overlay.open {
+        display: flex;
+    }
+
+    .popup-box {
+        background: white;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 450px;
+        position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+
+    .popup-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: #f1f5f9;
+        cursor: pointer;
+        color: #64748b;
+        z-index: 10;
+        font-weight: bold;
+    }
+</style>
+
+<div class="dash-wrap">
+
+    <div class="vacancy-header">
+        <div class="v-meta">{{ vacancy.get_staff_type_display }} • {{ vacancy.city }}</div>
+        <h2 class="v-title">{{ vacancy.hospital_name }}</h2>
+        <div style="font-size: 13px; color: #64748b; font-weight: 500;">
+            {% if vacancy.designation %}{{ vacancy.designation }} • {% endif %}
+            {% if vacancy.ward_type %}{{ vacancy.get_ward_type_display }} • {% endif %}
+            Scheduled: {{ vacancy.start_date }}
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-val" style="color: #534AB7;">{{ applicants_data|length }}</span>
+                <span class="stat-lbl">Applicants</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val" style="color: #10B981;">{{ vacancy.accepted_count }}</span>
+                <span class="stat-lbl">Shortlisted</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-pills">
+      
+        <!-- Naya -->
+<button onclick="filterCards('all')" id="tab-all" class="atab active-tab">All ({{ applicants_data|length }})</button>
+        <button onclick="filterCards('applied')" id="tab-applied" class="atab">Applied</button>
+        <button onclick="filterCards('accepted')" id="tab-accepted" class="atab">Accepted</button>
+        <button onclick="filterCards('rejected')" id="tab-rejected" class="atab">Rejected</button>
+    </div>
+
+    {% if applicants_data %}
+    {% for item in applicants_data %}
+    <div class="acard" data-status="{{ item.application.status }}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px;">
+
+            <div style="display:flex; gap:16px; align-items:center;">
+                <div class="user-avatar">
+                    {% if item.profile %}{{ item.profile.full_name|first|upper }}{% else %}?{% endif %}
+                </div>
+                <div>
+                    <div class="user-name">{% if item.profile %}{{ item.profile.full_name }}{% else %}{{
+                        item.application.applicant.username }}{% endif %}</div>
+                    <div class="user-meta">
+    {% if item.profile %}{{ item.profile.qualification|upper }} • {{ item.profile.experience|default:'0' }} Years Exp{% endif %}
+</div>
+<div style="font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 4px;">APPLIED {{ item.application.applied_at|date:"d M, g:i A" }}</div>
+                </div>
+            </div>
+
+            <div
+                style="display:flex; flex-direction:column; align-items:flex-end; gap:12px; flex: 1; min-width: 250px;">
+                <span class="badge badge-{{ item.application.status }}">{{ item.application.status }}</span>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button onclick="showProfile({{ item.application.id }})" class="btn-sm">View Profile</button>
+
+                   <button onclick="showContact(
+    '{% if item.profile.registration_no %}{{ item.profile.registration_no }}{% else %}N/A{% endif %}',
+    '{% if item.application.applicant.mobile %}{{ item.application.applicant.mobile }}{% else %}N/A{% endif %}'
+)" class="btn-sm" style="color:#534AB7; border-color:#EEEDFE;">Contact Info</button>
+
+                    {% if item.application.status != 'accepted' %}
+                    <form method="post" action="{% url 'update_vacancy_application' item.application.id %}"
+                        style="margin:0;">
+                        {% csrf_token %}<input type="hidden" name="status" value="accepted">
+                        <button type="submit" class="btn-sm"
+                            style="color:#1D9E75; border-color:#E1F5EE; background:#f0fdf9;">Accept</button>
+                    </form>
+                    {% endif %}
+
+                    {% if item.application.status != 'rejected' %}
+                    <form method="post" action="{% url 'update_vacancy_application' item.application.id %}"
+                        style="margin:0;">
+                        {% csrf_token %}<input type="hidden" name="status" value="rejected">
+                        <button type="submit" class="btn-sm"
+                            style="color:#E24B4A; border-color:#FCEBEB; background:#fff1f2;"
+                            onclick="return confirm('Reject this application?')">Reject</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div
+        style="text-align:center; padding:80px 20px; color:#9ca3af; background:white; border-radius:20px; border:2px dashed #e2e8f0;">
+        <!-- <div style="font-size: 40px; margin-bottom: 12px;">👥</div> -->
+        <p style="font-weight: 600;">No applicants found for this vacancy.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<div id="profile-popup" class="overlay">
+    <div class="popup-box">
+        <button class="popup-close" onclick="closeProfile()">✕</button>
+        <div id="profile-content">
+            <div style="text-align:center; padding:50px; color:#94a3b8; font-weight: 600;">Loading Profile...</div>
+        </div>
+    </div>
+</div>
+
+<div id="contact-popup" class="overlay">
+    <div class="popup-box" style="padding: 32px;">
+        <button class="popup-close"
+            onclick="document.getElementById('contact-popup').classList.remove('open')">✕</button>
+        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 24px;">Candidate Contact</h3>
+        <div id="contact-content"></div>
+    </div>
+</div>
+
+<script>
+    function filterCards(status) {
+        document.querySelectorAll('.acard').forEach(card => {
+            card.style.display = (status === 'all' || card.dataset.status === status) ? 'block' : 'none';
+        });
+        document.querySelectorAll('.atab').forEach(btn => btn.classList.remove('active-tab'));
+        document.getElementById('tab-' + status).classList.add('active-tab');
+    }
+
+    function showProfile(appId) {
+        document.getElementById('profile-popup').classList.add('open');
+        document.getElementById('profile-content').innerHTML = '<div style="text-align:center; padding:50px; color:#94a3b8; font-weight: 600;">Loading Profile...</div>';
+        fetch(`/hospitals/vacancy/application/profile-popup/${appId}/`)
+            .then(r => r.text())
+            .then(html => { document.getElementById('profile-content').innerHTML = html; })
+    }
+
+    function closeProfile() { document.getElementById('profile-popup').classList.remove('open'); }
+
+    function showContact(regNo, mobile) {
+        document.getElementById('contact-content').innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+                <label style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.5px;">Registration Number</label>
+                <div style="font-size: 15px; font-weight: 700; color: #1e293b; font-family: monospace; background: #f8fafc; padding: 12px; border-radius: 8px;">${regNo}</div>
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.5px;">Mobile Number</label>
+                <div style="font-size: 15px; font-weight: 700; color: #1e293b; background: #f0fdf9; padding: 12px; border-radius: 8px;">📞 ${mobile}</div>
+            </div>
+        </div>
+    `;
+        document.getElementById('contact-popup').classList.add('open');
+    }
+    window.onclick = function (event) {
+        if (event.target.classList.contains('overlay')) {
+            event.target.classList.remove('open');
+        }
+    }
+</script>
+{% endblock %}

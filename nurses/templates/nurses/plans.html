@@ -1,0 +1,462 @@
+{% extends 'nurses/base.html' %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    .wallet-card {
+        background: #2971F0; border-radius: 20px; padding: 24px;
+        color: white; margin-bottom: 24px; position: relative; overflow: hidden;
+    }
+    .wallet-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; }
+    .wallet-balance { font-size: 32px; font-weight: 800; color: #fff; margin: 5px 0; }
+
+    .plan-status-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 20px;
+        padding: 24px; height: 100%;
+    }
+
+    .section-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+    .section-sub   { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+
+    .plan-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 20px;
+        padding: 30px; transition: 0.2s; display: flex; flex-direction: column;
+        height: 100%; position: relative;
+    }
+    .plan-card:hover { border-color: #0fbf8f; transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    .plan-card.current { border: 2px solid #0fbf8f; }
+
+    .current-badge {
+        position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+        background: #0fbf8f; color: white; padding: 4px 12px; border-radius: 20px;
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+    }
+
+    .plan-name  { font-size: 16px; font-weight: 700; color: #111827; }
+    .plan-price { font-size: 36px; font-weight: 800; color: #0fbf8f; margin: 15px 0; }
+    .plan-price span { font-size: 16px; color: #9ca3af; font-weight: 500; }
+
+    .plan-duration-tag {
+        display: inline-block;
+        background: #E1F5EE; color: #0F6E56;
+        font-size: 11px; font-weight: 700;
+        padding: 3px 10px; border-radius: 99px;
+        margin-bottom: 14px;
+    }
+
+    .feature-list { list-style: none; padding: 0; margin: 20px 0; flex-grow: 1; }
+    .feature-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 13px; color: #4b5563; }
+    .feature-icon { color: #0fbf8f; font-weight: bold; flex-shrink: 0; }
+    .feature-item.locked { color: #9ca3af; }
+
+    .unlim-tag {
+        display: inline-flex; align-items: center; gap: 3px;
+        background: linear-gradient(135deg, #ede9fe, #f3f0ff);
+        border: 1px solid #c4b5fd;
+        color: #6d28d9; font-size: 11px; font-weight: 700;
+        padding: 2px 8px; border-radius: 99px;
+    }
+
+    .lock-tag {
+        display: inline-flex; align-items: center; gap: 3px;
+        background: #f3f4f6; border: 1px solid #e5e7eb;
+        color: #9ca3af; font-size: 11px; font-weight: 700;
+        padding: 2px 8px; border-radius: 99px;
+    }
+
+    .btn-buy {
+        background: #0fbf8f; color: white; border: none; padding: 12px;
+        border-radius: 12px; font-weight: 700; font-size: 14px; transition: 0.2s;
+        width: 100%; cursor: pointer;
+    }
+    .btn-buy:hover    { background: #0aa87d; }
+    .btn-buy:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; border: 1px solid #e5e7eb; }
+
+    .progress-custom { height: 6px; border-radius: 10px; background: #f3f4f6; margin-top: 8px; overflow: hidden; }
+
+    /* Unlimited pills */
+    .vacancy-unlimited-pill {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: linear-gradient(135deg, #ede9fe, #f3f0ff);
+        border: 1px solid #c4b5fd;
+        color: #6d28d9; font-size: 12px; font-weight: 700;
+        padding: 4px 12px; border-radius: 99px;
+    }
+    .token-unlimited-pill {
+        display: inline-block;
+        background: rgba(255,255,255,0.15);
+        color: #fff; font-size: 13px; font-weight: 700;
+        padding: 4px 14px; border-radius: 99px;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* History */
+    .history-section { margin-top: 40px; }
+    .history-card { background: white; border: 1px solid #e5e7eb; border-radius: 20px; overflow: hidden; }
+    .history-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #f3f4f6; }
+    .history-title { font-size: 15px; font-weight: 800; color: #111827; display: flex; align-items: center; gap: 8px; }
+    .history-badge { background: #E1F5EE; color: #0F6E56; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .history-balance-pill { background: #1a2342; color: #fff; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; }
+    .history-balance-pill span { color: #0fbf8f; }
+
+    .tx-table { width: 100%; border-collapse: collapse; }
+    .tx-table thead tr { background: #f9fafb; border-bottom: 1px solid #f3f4f6; }
+    .tx-table thead th { padding: 10px 24px; font-size: 10px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; text-align: left; }
+    .tx-table thead th:last-child { text-align: right; }
+    .tx-table tbody tr { border-bottom: 1px solid #f9fafb; transition: background 0.12s; }
+    .tx-table tbody tr:last-child { border-bottom: none; }
+    .tx-table tbody tr:hover { background: #fafafa; }
+    .tx-table tbody td { padding: 14px 24px; font-size: 13px; color: #374151; vertical-align: middle; }
+    .tx-table tbody td:last-child { text-align: right; }
+
+    .tx-type { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+    .tx-type-credit { background: #E1F5EE; color: #0F6E56; }
+    .tx-type-debit  { background: #fef2f2; color: #dc2626; }
+    .tx-type-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; }
+    .tx-type-credit .tx-type-icon { background: #0fbf8f; color: #fff; }
+    .tx-type-debit  .tx-type-icon { background: #ef4444; color: #fff; }
+
+    .tx-amount-credit { font-size: 14px; font-weight: 800; color: #0fbf8f; }
+    .tx-amount-debit  { font-size: 14px; font-weight: 800; color: #ef4444; }
+    .tx-note { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6b7280; font-size: 12px; }
+    .tx-date { color: #9ca3af; font-size: 11px; white-space: nowrap; }
+    .tx-empty { text-align: center; padding: 48px 24px; color: #9ca3af; font-size: 13px; }
+    .tx-empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+</style>
+
+<div class="dash-wrap">
+
+    <!-- ── Top: Wallet Balance + Active Plan ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="wallet-card">
+                <div class="wallet-label">Current Balance</div>
+                {% if current_plan and current_plan.plan.unlimited_tokens %}
+                    <div class="wallet-balance">∞</div>
+                    <span class="token-unlimited-pill">Unlimited Tokens</span>
+                {% else %}
+                    <div class="wallet-balance">{{ wallet_balance }} Tokens</div>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 6px;">Use tokens to apply for hospital shifts</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="plan-status-card">
+                {% if current_plan %}
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="wallet-label" style="color: #9ca3af;">Active Plan</div>
+                        <div class="plan-name" style="font-size: 20px; margin-top: 5px; color: #0fbf8f;">{{ current_plan.plan.name }} Tier</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            {% if current_plan.end_date %}
+                                Valid until {{ current_plan.end_date|date:"d M Y" }}
+                            {% elif current_plan.plan.unlimited_tokens %}
+                                Unlimited shift application tokens
+                            {% else %}
+                                Includes {{ current_plan.plan.tokens }} shift application tokens
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        {% if current_plan.plan.unlimited_vacancy_apply %}
+                            <div class="wallet-label" style="color: #9ca3af; margin-bottom: 8px;">Vacancy Applications</div>
+                            <span class="vacancy-unlimited-pill">∞ Unlimited Apply</span>
+                        {% else %}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="wallet-label" style="color: #9ca3af;">Vacancy Applications</span>
+                                <span style="font-size: 12px; font-weight: 700;">{{ current_plan.vacancy_limit_used }} / {{ current_plan.plan.vacancy_limit }} used</span>
+                            </div>
+                            <div class="progress-custom">
+                                {% if current_plan.plan.vacancy_limit %}
+                                <div class="progress-bar" style="background: #0fbf8f; width: {% widthratio current_plan.vacancy_limit_used current_plan.plan.vacancy_limit 100 %}%"></div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-2">
+                    <div class="wallet-label" style="color: #9ca3af;">Membership Status</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #4b5563; margin-top: 5px;">No active plan found. Purchase a plan to unlock premium features.</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Subscription Plans ── -->
+  <div class="row g-4">
+        {% for plan in plans %}
+        <div class="col-md-4">
+            <div class="plan-card {% if current_plan and current_plan.plan.pk == plan.pk %}current{% endif %}">
+                {% if current_plan and current_plan.plan.pk == plan.pk %}
+                <div class="current-badge">Active Plan</div>
+                {% endif %}
+
+                <div class="plan-name">{{ plan.name }}</div>
+                <div class="plan-price">₹{{ plan.price }}<span>/One-time</span></div>
+
+                <div class="plan-duration-tag">{{ plan.get_duration_months_display }}</div>
+
+                {% if plan.description %}
+                <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">{{ plan.description }}</p>
+                {% endif %}
+
+                <ul class="feature-list">
+
+                    <!-- Tokens feature -->
+                    {% if plan.token_mode != 'disabled' %}
+                    <li class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <div>
+                            {% if plan.unlimited_tokens %}
+                                <span class="unlim-tag">∞ Unlimited</span> Shift Tokens
+                            {% else %}
+                                <strong>{{ plan.tokens }}</strong> Shift Tokens
+                            {% endif %}
+                            <br><small class="text-muted">Required for each hospital shift application</small>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="feature-item locked">
+                        <span class="feature-icon" style="color:#d1d5db;">✗</span>
+                        <div>
+                            <span class="lock-tag">🔒 Locked</span> Shift Tokens
+                            <br><small style="color:#d1d5db;">Is plan mein tokens nahi milte</small>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    <!-- Vacancy Apply feature -->
+                    {% if plan.vacancy_apply_enabled %}
+                    <li class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <div>
+                            {% if plan.unlimited_vacancy_apply %}
+                                <span class="unlim-tag">∞ Unlimited</span> Vacancy Applies
+                            {% else %}
+                                <strong>{{ plan.vacancy_limit }}</strong> Vacancy Applies
+                            {% endif %}
+                            <br><small class="text-muted">Apply for long-term permanent positions</small>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="feature-item locked">
+                        <span class="feature-icon" style="color:#d1d5db;">✗</span>
+                        <div>
+                            <span class="lock-tag">🔒 Locked</span> Vacancy Applies
+                            <br><small style="color:#d1d5db;">Is plan mein vacancy apply nahi kar sakte</small>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    <!-- Shift Post feature -->
+                    {% if plan.shift_post_enabled %}
+                    <li class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <div>
+                            {% if plan.unlimited_shift_post %}
+                                <span class="unlim-tag">∞ Unlimited</span>
+                            {% endif %}
+                            Shift Posting
+                            <br><small class="text-muted">Post shifts for other doctors/nurses</small>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="feature-item locked">
+                        <span class="feature-icon" style="color:#d1d5db;">✗</span>
+                        <div>
+                            <span class="lock-tag">🔒 Locked</span> Shift Posting
+                            <br><small style="color:#d1d5db;">Is plan mein shift post nahi kar sakte</small>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    <!-- Urgent Shift Notification -->
+                    {% if plan.urgent_shift_enabled %}
+                    <li class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <div>
+                            Urgent Shift Notification
+                            <br><small class="text-muted">Instant alerts for urgent shift openings</small>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="feature-item locked">
+                        <span class="feature-icon" style="color:#d1d5db;">✗</span>
+                        <div>
+                            <span class="lock-tag">🔒 Locked</span> Urgent Shift Notification
+                            <br><small style="color:#d1d5db;">Upgrade karo urgent alerts ke liye</small>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    <!-- Priority Support — always shown -->
+                    <li class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <div>Priority Support<br><small class="text-muted">Dedicated assistance for active members</small></div>
+                    </li>
+
+                </ul>
+
+                <div class="mt-auto">
+                    {% if plan.price == 0 %}
+                    <button class="btn-buy" style="background:#f8fafc; color:#94a3b8;" disabled>Free Tier</button>
+                    {% elif current_plan and current_plan.plan.pk == plan.pk %}
+                    <button class="btn-buy" disabled>Current Plan</button>
+                    {% else %}
+                    <button class="btn-buy pay-btn"
+                            data-plan-id="{{ plan.pk }}"
+                            data-plan-name="{{ plan.name }}"
+                                data-amount="{{ plan.price }}">
+                        Purchase Plan
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div style="text-align:center; padding:60px; background:white; border-radius:20px; border:1px dashed #d1d5db; color:#9ca3af;">
+                Membership plans for nurses are currently under maintenance.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ── Transaction History ── -->
+    <div class="history-section">
+        <div class="history-card">
+            <div class="history-header">
+                <div class="history-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Token Transaction History
+                    {% if wallet_transactions %}
+                    <span class="history-badge">Last {{ wallet_transactions|length }} records</span>
+                    {% endif %}
+                </div>
+                <div class="history-balance-pill">
+                    Balance:
+                    {% if current_plan and current_plan.plan.unlimited_tokens %}
+                        <span>∞</span>
+                    {% else %}
+                        <span>{{ wallet_balance }}</span>
+                    {% endif %}
+                    tokens
+                </div>
+            </div>
+
+            {% if wallet_transactions %}
+            <div style="overflow-x: auto;">
+                <table class="tx-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Date & Time</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in wallet_transactions %}
+                        <tr>
+                            <td style="color:#d1d5db; font-size:11px; font-weight:700;">{{ forloop.counter }}</td>
+                            <td>
+                                {% if tx.transaction_type == 'credit' %}
+                                <div class="tx-type tx-type-credit">
+                                    <div class="tx-type-icon">+</div> Credit
+                                </div>
+                                {% else %}
+                                <div class="tx-type tx-type-debit">
+                                    <div class="tx-type-icon">−</div> Debit
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td><div class="tx-note" title="{{ tx.note }}">{{ tx.note|default:"—" }}</div></td>
+                            <td>
+                                <div class="tx-date">
+                                    {{ tx.created_at|date:"d M Y" }}<br>
+                                    <span style="color:#d1d5db;">{{ tx.created_at|time:"g:i A" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if tx.transaction_type == 'credit' %}
+                                <span class="tx-amount-credit">+ {{ tx.amount }}</span>
+                                {% else %}
+                                <span class="tx-amount-debit">− {{ tx.amount }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="tx-empty">
+                <div class="tx-empty-icon">🪙</div>
+                <div style="font-weight: 700; color: #6b7280; margin-bottom: 4px;">No transactions yet</div>
+                <div>Your token activity will appear here once you purchase a plan.</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  document.querySelectorAll('.pay-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const planId   = this.dataset.planId;
+      const planName = this.dataset.planName;
+
+      fetch(`/plans/order/${planId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) { alert('Error: ' + data.error); return; }
+
+        const options = {
+          key:         '{{ razorpay_key }}',
+          amount:      data.amount,
+          currency:    'INR',
+          name:        'MedBridge',
+          description: planName + ' Membership Purchase',
+          order_id:    data.order_id,
+          handler: function(response) {
+            fetch('/plans/verify/', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature,
+                plan_id:             planId,
+              }),
+            })
+            .then(res => res.json())
+            .then(result => {
+              if (result.success) { window.location.href = '/plans/success/'; }
+              else { alert('Payment verification failed.'); }
+            });
+          },
+          prefill: { name: '{{ request.user.username }}' },
+          theme: { color: '#0fbf8f' },
+        };
+        new Razorpay(options).open();
+      });
+    });
+  });
+</script>
+{% endblock %}

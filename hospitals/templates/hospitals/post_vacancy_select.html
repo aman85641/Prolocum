@@ -1,0 +1,87 @@
+{% extends 'hospitals/base.html' %}
+{% block title %}Post Vacancy{% endblock %}
+{% block page_title %}Post New Vacancy{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { 
+        padding: 60px 0; 
+        font-family: 'Inter', sans-serif; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+    }
+
+    /* Modern Selection Card - Matches Your Elite Theme */
+    .selection-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: 24px;
+        padding: 40px 32px; width: 100%; max-width: 440px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        position: relative;
+    }
+    
+    .selection-card::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+        background: linear-gradient(90deg, #534AB7, #8b5cf6); border-radius: 24px 24px 0 0;
+    }
+
+    .selection-h { font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .selection-p { font-size: 14px; color: #64748b; margin-bottom: 32px; line-height: 1.6; }
+
+    /* Custom Button Design */
+    .btn-type {
+        width: 100%; padding: 24px; margin-bottom: 16px; border-radius: 16px;
+        border: 2px solid #f1f5f9; background: white; color: #334155;
+        font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        text-align: center;
+    }
+    
+    .btn-type:hover {
+        border-color: #534AB7; background: #fdfdff; transform: translateY(-4px);
+        box-shadow: 0 12px 20px -8px rgba(83, 74, 183, 0.15);
+    }
+
+    .btn-type span.sub-text { font-size: 12px; font-weight: 500; color: #94a3b8; }
+    .btn-type:hover .sub-text { color: #534AB7; opacity: 0.8; }
+    .btn-type:hover { color: #534AB7; }
+
+    .btn-type:last-child { margin-bottom: 0; }
+
+    .cancel-link {
+        display: inline-block; margin-top: 24px; font-size: 13px; 
+        color: #94a3b8; text-decoration: none; font-weight: 700;
+        transition: color 0.2s;
+    }
+    .cancel-link:hover { color: #534AB7; }
+
+</style>
+
+<div class="dash-wrap">
+    <div class="selection-card">
+        <h2 class="selection-h">Post a Vacancy</h2>
+        <p class="selection-p">Please choose the type of requirement you want to list on the platform.</p>
+
+        <form method="post" action="{% url 'hospital_post_vacancy' %}">
+            {% csrf_token %}
+
+            <button type="submit" name="shift_type" value="single" class="btn-type">
+                Single Shift Post
+                <span class="sub-text">One-time requirement or locum slots</span>
+            </button>
+
+            <button type="submit" name="shift_type" value="multiple" class="btn-type">
+                Long-term Vacancy
+                <span class="sub-text">Monthly roles or recurring schedules</span>
+            </button>
+        </form>
+
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f8fafc;">
+            <a href="{% url 'hospital_posted_vacancies' %}" class="cancel-link">
+                ← Back to Posted Vacancies
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

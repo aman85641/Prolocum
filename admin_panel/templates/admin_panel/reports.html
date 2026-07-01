@@ -1,0 +1,165 @@
+{% extends 'admin_panel/base.html' %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<style>
+/* Dashboard se match karti hui styles */
+.dash-wrap{padding:4px 0 32px}
+.section-header{display:flex;align-items:center;gap:10px;margin:28px 0 12px}
+.section-label{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.6px}
+
+.stats-grid{display:grid;gap:10px;margin-bottom:4px}
+.g-6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+.scard{background:#f9fafb;border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;transition:background .15s}
+.scard:hover{background:#f3f4f6}
+.scard-bar{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+
+.bar-purple{background:#7F77DD}
+.bar-teal{background:#1D9E75}
+.bar-amber{background:#BA7517}
+.bar-red{background:#E24B4A}
+.bar-orange{background:#f97316}
+
+.scard-label{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-bottom:7px}
+.scard-value{font-size:24px;font-weight:700;color:#111827;line-height:1}
+.scard-sub{font-size:11px;color:#6b7280;margin-top:5px}
+
+@media(max-width:1024px){
+    .g-6{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:640px){
+    .g-6, .g-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+
+<div class="dash-wrap">
+
+    <div class="section-header">
+        <span class="section-label"> User Stats</span>
+    </div>
+    <div class="stats-grid g-6">
+        <div class="scard">
+            <div class="scard-bar bar-purple"></div>
+            <div class="scard-label">Total Users</div>
+            <div class="scard-value">{{ user_stats.total }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-purple"></div>
+            <div class="scard-label">Doctors</div>
+            <div class="scard-value">{{ user_stats.doctors }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-purple"></div>
+            <div class="scard-label">Nurses</div>
+            <div class="scard-value">{{ user_stats.nurses }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-purple"></div>
+            <div class="scard-label">Hospitals</div>
+            <div class="scard-value">{{ user_stats.hospitals }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-teal"></div>
+            <div class="scard-label">Active</div>
+            <div class="scard-value">{{ user_stats.active }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-red"></div>
+            <div class="scard-label">Banned</div>
+            <div class="scard-value">{{ user_stats.inactive }}</div>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-label"> Shift Stats</span>
+    </div>
+    <div class="stats-grid g-4">
+        <div class="scard">
+            <div class="scard-bar bar-purple"></div>
+            <div class="scard-label">Total Shifts</div>
+            <div class="scard-value">{{ shift_stats.total }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-teal"></div>
+            <div class="scard-label">Active</div>
+            <div class="scard-value">{{ shift_stats.active }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-red"></div>
+            <div class="scard-label">Urgent</div>
+            <div class="scard-value">{{ shift_stats.urgent }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-teal"></div>
+            <div class="scard-label">Completed</div>
+            <div class="scard-value">{{ shift_stats.completed }}</div>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-label"> Shift Applications</span>
+    </div>
+    <div class="stats-grid g-4">
+        <div class="scard">
+            <div class="scard-bar bar-purple"></div>
+            <div class="scard-label">Total Apps</div>
+            <div class="scard-value">{{ app_stats.total }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-teal"></div>
+            <div class="scard-label">Accepted</div>
+            <div class="scard-value">{{ app_stats.accepted }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-red"></div>
+            <div class="scard-label">Rejected</div>
+            <div class="scard-value">{{ app_stats.rejected }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-orange"></div>
+            <div class="scard-label">Withdrawn</div>
+            <div class="scard-value">{{ app_stats.withdrawn }}</div>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-label"> Vacancy Stats</span>
+    </div>
+    <div class="stats-grid g-6">
+        <div class="scard">
+            <div class="scard-bar bar-amber"></div>
+            <div class="scard-label">Total Vacancies</div>
+            <div class="scard-value">{{ vac_stats.total }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-teal"></div>
+            <div class="scard-label">Active</div>
+            <div class="scard-value">{{ vac_stats.active }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-red"></div>
+            <div class="scard-label">Urgent</div>
+            <div class="scard-value">{{ vac_stats.urgent }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-purple"></div>
+            <div class="scard-label">Total Apps</div>
+            <div class="scard-value">{{ vac_app_stats.total }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-teal"></div>
+            <div class="scard-label">Accepted</div>
+            <div class="scard-value">{{ vac_app_stats.accepted }}</div>
+        </div>
+        <div class="scard">
+            <div class="scard-bar bar-red"></div>
+            <div class="scard-label">Rejected</div>
+            <div class="scard-value">{{ vac_app_stats.rejected }}</div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block page_title %}Posted Shifts{% endblock %}
+
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    /* Top Action Bar */
+    .header-flex { 
+        display: flex; justify-content: space-between; align-items: center; 
+        margin-bottom: 28px; gap: 16px; flex-wrap: wrap;
+    }
+    .header-title-text { font-size: 13px; color: #64748b; font-weight: 500; }
+    
+    .btn-new {
+        background: #534AB7; color: white; padding: 10px 20px; border-radius: 10px;
+        text-decoration: none; font-size: 13.5px; font-weight: 700; transition: 0.2s;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-new:hover { background: #433a96; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(83, 74, 183, 0.2); }
+
+    /* Shift Card Styling */
+    .shift-item {
+        background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+        padding: 24px; margin-bottom: 20px; position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .shift-item:hover { border-color: #cbd5e1; transform: translateY(-4px); box-shadow: 0 12px 24px -10px rgba(0,0,0,0.05); }
+
+    /* Hospital Info */
+    .hosp-name { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 4px; display: block; letter-spacing: -0.3px; }
+    .hosp-loc { font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
+
+    /* Tags Row */
+    .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+    .tag { 
+        padding: 4px 12px; border-radius: 6px; font-size: 10px; 
+        font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .tag-urgent { background: #FCEBEB; color: #E24B4A; }
+    .tag-inactive { background: #f1f5f9; color: #64748b; }
+    .tag-qual { background: #EEEDFE; color: #534AB7; }
+
+    /* Details Grid */
+    .details-line { font-size: 14px; color: #475569; display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+    .sep { color: #cbd5e1; }
+
+    /* Stats Display - Compact Grid */
+    .stats-container { 
+        display: grid; grid-template-columns: repeat(3, 1fr); 
+        background: #f8fafc; border-radius: 12px; overflow: hidden;
+        border: 1px solid #f1f5f9; margin-bottom: 24px;
+    }
+    .stat-box { padding: 14px; text-align: center; border-right: 1px solid #f1f5f9; }
+    .stat-box:last-child { border-right: none; }
+    .stat-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .stat-count { font-size: 16px; font-weight: 800; color: #1e293b; }
+    .stat-count.blue { color: #534AB7; }
+    .stat-count.green { color: #10b981; }
+
+    /* Footer & Action Bar */
+    .shift-footer { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding-top: 20px; border-top: 1px solid #f1f5f9; 
+    }
+    .pay-container { display: flex; flex-direction: column; }
+    .pay-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+    .pay-text { font-size: 20px; font-weight: 800; color: #1e293b; line-height: 1.2; }
+    
+    .actions-flex { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    flex-wrap: wrap;
+}
+    
+    .btn-manage {
+        background: white; border: 1.5px solid #e2e8f0; color: #334155; 
+        padding: 10px 18px; border-radius: 10px; font-size: 13px; 
+        font-weight: 700; text-decoration: none; transition: 0.2s;
+    }
+    .btn-manage:hover { background: #f8fafc; border-color: #534AB7; color: #534AB7; }
+    
+    .btn-deactivate {
+        background: transparent; border: none; color: #94a3b8; font-size: 12px; 
+        font-weight: 600; cursor: pointer; padding: 8px; transition: color 0.2s;
+    }
+    .btn-deactivate:hover { color: #E24B4A; text-decoration: underline; }
+
+    /* Empty State */
+    .empty-card { 
+        text-align: center; padding: 80px 40px; background: white; 
+        border-radius: 20px; border: 2px dashed #e2e8f0; 
+    }
+
+  @media(max-width: 640px) {
+    .shift-footer { flex-direction: column; align-items: stretch; gap: 16px; }
+    .actions-flex { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .btn-manage { 
+        text-align: center; 
+        grid-column: span 2;  /* full width */
+    }
+    .details-line { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .sep { display: none; }
+}
+</style>
+
+<div class="dash-wrap">
+    
+    <div class="header-flex">
+        <div class="header-title-text">Showing total {{ shifts|length }} posted shifts</div>
+        <a href="{% url post_url|default:'post_new_shift' %}" class="btn-new">
+            <span>+</span> Post New Shift
+        </a>
+    </div>
+
+    {% if shifts %}
+        {% for shift in shifts %}
+        <div class="shift-item">
+            <div class="shift-header">
+                <div>
+                    <span class="hosp-name">{{ shift.hospital_name }}</span>
+                    <span class="hosp-loc">{{ shift.city }} • {{ shift.get_ward_type_display }}</span>
+                </div>
+            </div>
+<div class="tag-row">
+    {% if shift.is_urgent %}<span class="tag tag-urgent">Urgent Priority</span>{% endif %}
+    {% if not shift.is_active %}<span class="tag tag-inactive">Inactive / Closed</span>{% endif %}
+    <span class="tag tag-qual">{{ shift.get_qualification_required_display }}</span>
+    <span class="tag tag-qual">{{ shift.get_target_role_display }}</span>
+    <span style="color:#94a3b8; font-size:12px; font-weight:600; align-self:center;">Posted {{ shift.created_at|timesince }} ago</span>
+</div>
+{% if shift.location_link %}
+<a href="{{ shift.location_link }}" target="_blank" style="
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: #0fbf8f;
+    text-decoration: none; margin-bottom: 12px;
+    background: #e6faf5; padding: 5px 12px;
+    border-radius: 6px; border: 1px solid rgba(15,191,143,0.2);
+">
+    📍 View Location on Map
+</a>
+{% endif %}
+          <div class="details-line">
+    <span><strong>Date:</strong> {{ shift.start_date }}
+        {% if shift.shift_type == 'multiple' and shift.end_date %}
+            → {{ shift.end_date }}
+        {% endif %}
+    </span>
+    <span class="sep">|</span>
+    <span><strong>Shift:</strong> {{ shift.start_time|time:"g:i A" }} – {{ shift.end_time|time:"g:i A" }}</span>
+</div>
+
+            <div class="stats-container">
+                <div class="stat-box">
+                    <span class="stat-label">Applicants</span>
+                    <span class="stat-count blue">{{ shift.applications.count }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Accepted</span>
+                    <span class="stat-count green">{{ shift.accepted_count }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Reserved</span>
+                    <span class="stat-count" style="color: #f59e0b;">{{ shift.reserved_count }}</span>
+                </div>
+            </div>
+
+            <div class="shift-footer">
+                <div class="pay-container">
+                    <span class="pay-label">Payout per shift</span>
+                    <span class="pay-text">₹{{ shift.pay }}</span>
+                </div>
+                
+  <div class="actions-flex">
+    <a href="/{{ request.user.role }}s/shifts/applicants/{{ shift.id }}/" 
+       class="btn-manage" style="text-align:center; grid-column: span 2;">
+        Manage Applicants
+    </a>
+
+    <a href="/{{ request.user.role }}s/shifts/edit/{{ shift.id }}/"
+       style="background:white; border:1.5px solid #534AB7; color:#534AB7;
+              padding:10px 18px; border-radius:10px; font-size:13px;
+              font-weight:700; text-decoration:none; text-align:center;
+              transition:0.2s; display:block;">
+         Edit
+    </a>
+
+    <form method="post" action="/{{ request.user.role }}s/shifts/delete/{{ shift.id }}/"
+          onsubmit="return confirm('Delete this shift?')">
+        {% csrf_token %}
+        <button type="submit"
+                style="width:100%; background:white; border:1.5px solid #E24B4A;
+                       color:#E24B4A; padding:10px 18px; border-radius:10px;
+                       font-size:13px; font-weight:700; cursor:pointer;">
+             Delete
+        </button>
+    </form>
+
+    {% if shift.is_active %}
+    <form method="post" action="{% url deactivate_url|default:'deactivate_shift' shift.id %}"
+          style="grid-column: span 2;">
+        {% csrf_token %}
+        <button type="submit" class="btn-deactivate" style="width:100%;"
+                onclick="return confirm('Deactivate this shift?')">
+            Deactivate Shift
+        </button>
+    </form>
+    {% endif %}
+</div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-card">
+            <h3 style="color: #1e293b; margin-bottom: 8px;">No shifts posted yet</h3>
+            <p style="color: #64748b; margin-bottom: 24px;">Start posting shifts to find qualified doctors and nurses.</p>
+            <a href="{% url post_url|default:'post_new_shift' %}" class="btn-new">Create Your First Post</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

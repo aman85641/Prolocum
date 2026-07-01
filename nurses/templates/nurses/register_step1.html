@@ -1,0 +1,382 @@
+    {% load static %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nurse – Step 1 | ProLocum</title>
+        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'users/css/register.css' %}">
+        <style>
+.city-dropdown-wrap { position: relative; }
+.city-dropdown-list {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 10px; max-height: 200px; overflow-y: auto;
+    z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 4px;
+}
+.city-dropdown-list .city-item {
+    padding: 10px 14px; font-size: 14px; color: #111827;
+    cursor: pointer; border-bottom: 1px solid #f3f4f6;
+}
+.city-dropdown-list .city-item:hover { background: #f0fdf4; color: #0fbf8f; }
+.city-dropdown-list .city-item:last-child { border-bottom: none; }
+.city-dropdown-list .city-no-result {
+    padding: 10px 14px; font-size: 13px; color: #9ca3af; text-align: center;
+}
+</style>
+    </head>
+    <body>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <a href="javascript:history.back()" class="back-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 5l-7 7 7 7"/>
+                </svg>
+            </a>
+            <span class="page-title">Enter Details</span>
+        </div>
+        <div class="topbar-right">
+            {% if progress > 0 %}
+            <span class="progress-label">{{ progress }}%</span>
+            <div class="progress-bar"><div class="progress-fill" style="width:{{ progress }}%"></div></div>
+            {% endif %}
+            <button class="reset-btn" type="button" onclick="resetForm()">RESET</button>
+        </div>
+    </div>
+
+    <!-- STEP INDICATOR -->
+    <div class="step-indicator">
+        <div class="step-item active">
+            <div class="step-dot">1</div>
+            <span>Basic Info</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item">
+            <div class="step-dot">2</div>
+            <span>Skills</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item">
+            <div class="step-dot">3</div>
+            <span>Documents</span>
+        </div>
+    </div>
+
+    <!-- PAGE BODY -->
+    <div class="page-body">
+        <form method="POST" id="step1Form" novalidate>
+            {% csrf_token %}
+
+            <!-- CARD 1: Personal Info -->
+            <div class="form-card">
+                <div class="card-header">
+                    <div class="card-icon">👩‍⚕️</div>
+                    <div>
+                        <div class="card-title">Personal Information</div>
+                        <div class="card-sub">Basic details about you</div>
+                    </div>
+                </div>
+
+                <div class="input-group" id="grp_full_name">
+                    <label class="input-label">Full Name <span class="req">* (As Per Aadhar)</span></label>
+                    <input class="input-field" type="text" name="full_name" placeholder="Priya Sharma"
+                        value="{% if profile %}{{ profile.full_name }}{% else %}{{ session_data.full_name }}{% endif %}">
+                    <span class="err-msg" id="err_full_name">⚠ Name is required</span>
+                </div>
+
+                <div class="two-col">
+                    <div class="input-group" id="grp_age">
+                        <label class="input-label">Age <span class="req">*</span></label>
+                        <input class="input-field" type="number" name="age" placeholder="24"
+                            value="{% if profile %}{{ profile.age }}{% else %}{{ session_data.age }}{% endif %}">
+                        <span class="err-msg" id="err_age">⚠ Required</span>
+                    </div>
+                    <div class="input-group" id="grp_sex">
+                        <label class="input-label">Sex <span class="req">*</span></label>
+                        <select class="input-field" name="sex">
+                            <option value="" disabled {% if not profile and not session_data.sex %}selected{% endif %}>Select</option>
+                            <option value="male"   {% if profile.sex == 'male'   or session_data.sex == 'male'   %}selected{% endif %}>Male</option>
+                            <option value="female" {% if profile.sex == 'female' or session_data.sex == 'female' %}selected{% endif %}>Female</option>
+                            <option value="other"  {% if profile.sex == 'other'  or session_data.sex == 'other'  %}selected{% endif %}>Other</option>
+                        </select>
+                        <span class="err-msg" id="err_sex">⚠ Required</span>
+                    </div>
+                </div>
+
+                <div class="input-group" id="grp_registration_no">
+                    <label class="input-label">Registration No <span class="req">*</span></label>
+                    <input class="input-field" type="text" name="registration_no" placeholder="REG-12345"
+                        value="{% if profile %}{{ profile.registration_no }}{% else %}{{ session_data.registration_no }}{% endif %}">
+                    <span class="err-msg" id="err_registration_no">⚠ Registration No is required</span>
+                </div>
+
+                <div class="two-col">
+                    <div class="input-group" id="grp_qualification">
+                        <label class="input-label">Qualification <span class="req">*</span></label>
+                        <select class="input-field" name="qualification">
+                            <option value="" disabled {% if not profile and not session_data.qualification %}selected{% endif %}>Select</option>
+                            <option value="gnm"         {% if profile.qualification == 'gnm'         or session_data.qualification == 'gnm'         %}selected{% endif %}>GNM</option>
+                            <option value="bsc_nursing" {% if profile.qualification == 'bsc_nursing' or session_data.qualification == 'bsc_nursing' %}selected{% endif %}>B.Sc Nursing</option>
+                            <option value="anm"         {% if profile.qualification == 'anm'         or session_data.qualification == 'anm'         %}selected{% endif %}>ANM</option>
+                            <option value="msc_nursing" {% if profile.qualification == 'msc_nursing' or session_data.qualification == 'msc_nursing' %}selected{% endif %}>M.Sc Nursing</option>
+                        </select>
+                        <span class="err-msg" id="err_qualification">⚠ Required</span>
+                    </div>
+                    <div class="input-group" id="grp_experience">
+                        <label class="input-label">Experience <span class="req">*</span></label>
+                        <input class="input-field" type="text" name="experience" placeholder="5 Years"
+                            value="{% if profile %}{{ profile.experience }}{% else %}{{ session_data.experience }}{% endif %}">
+                        <span class="err-msg" id="err_experience">⚠ Required</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: Address -->
+            <div class="form-card">
+                <div class="card-header">
+                    <div class="card-icon">📍</div>
+                    <div>
+                        <div class="card-title">Address Details</div>
+                        <div class="card-sub">Where are you based?</div>
+                    </div>
+                </div>
+
+                <div class="input-group" id="grp_address">
+                    <label class="input-label">Full Address <span class="req">*</span></label>
+                    <input class="input-field" type="text" name="address" placeholder="House No, Street, Area"
+                        value="{% if profile %}{{ profile.address }}{% else %}{{ session_data.address }}{% endif %}">
+                    <span class="err-msg" id="err_address">⚠ Address is required</span>
+                </div>
+
+                <div class="two-col">
+                    <div class="input-group" id="grp_state">
+                        <label class="input-label">State <span class="req">*</span></label>
+                        <input class="input-field" type="text" name="state" placeholder="Maharashtra"
+                            value="{% if profile %}{{ profile.state }}{% else %}{{ session_data.state }}{% endif %}">
+                        <span class="err-msg" id="err_state">⚠ Required</span>
+                    </div>
+                    <div class="input-group" id="grp_city">
+    <label class="input-label">City <span class="req">*</span></label>
+    <div class="city-dropdown-wrap">
+        <input class="input-field" type="text" id="city_search"
+               placeholder="Search city..." autocomplete="off"
+               value="{% if profile %}{{ profile.city }}{% else %}{{ session_data.city }}{% endif %}">
+        <input type="hidden" name="city" id="city_hidden" 
+               value="{% if profile %}{{ profile.city }}{% else %}{{ session_data.city }}{% endif %}">
+        <div class="city-dropdown-list" id="city_dropdown" style="display:none;"></div>
+    </div>
+    <span class="err-msg" id="err_city">⚠ Required</span>
+</div>
+                </div>
+
+                <div class="input-group" id="grp_pincode">
+                    <label class="input-label">Pincode <span class="req">*</span></label>
+                    <input class="input-field" type="text" name="pincode" placeholder="400001"
+                        value="{% if profile %}{{ profile.pincode }}{% else %}{{ session_data.pincode }}{% endif %}">
+                    <span class="err-msg" id="err_pincode">⚠ Pincode is required</span>
+                </div>
+            </div>
+
+            <!-- CARD 3: Ward Preferences -->
+            <div class="form-card" id="grp_ward">
+                <div class="card-header">
+                    <div class="card-icon">🏥</div>
+                    <div>
+                        <div class="card-title">Ward Preference <span class="req">*</span></div>
+                        <div class="card-sub">Select one or more wards you prefer</div>
+                    </div>
+                </div>
+
+                <div class="ward-grid">
+                    <label class="ward-chip">
+                        <input type="checkbox" name="ward_preferences" value="general"
+                            {% if 'general' in profile_wards %}checked{% elif not profile and 'general' in session_data.ward_preferences %}checked{% endif %}>
+                        <span class="chip-inner">🛏 General Ward</span>
+                    </label>
+                    <label class="ward-chip">
+                        <input type="checkbox" name="ward_preferences" value="icu"
+                            {% if 'icu' in profile_wards %}checked{% elif not profile and 'icu' in session_data.ward_preferences %}checked{% endif %}>
+                        <span class="chip-inner">⚡ ICU Ward</span>
+                    </label>
+                    <label class="ward-chip">
+                        <input type="checkbox" name="ward_preferences" value="casualty"
+                            {% if 'casualty' in profile_wards %}checked{% elif not profile and 'casualty' in session_data.ward_preferences %}checked{% endif %}>
+                        <span class="chip-inner">🚨 Casualty Ward</span>
+                    </label>
+                    <label class="ward-chip">
+                        <input type="checkbox" name="ward_preferences" value="female"
+                            {% if 'female' in profile_wards %}checked{% elif not profile and 'female' in session_data.ward_preferences %}checked{% endif %}>
+                        <span class="chip-inner">👩 Female Ward</span>
+                    </label>
+                    <label class="ward-chip">
+                        <input type="checkbox" name="ward_preferences" value="pediatric"
+                            {% if 'pediatric' in profile_wards %}checked{% elif not profile and 'pediatric' in session_data.ward_preferences %}checked{% endif %}>
+                        <span class="chip-inner">👶 Pediatric Ward</span>
+                    </label>
+                    <label class="ward-chip">
+                        <input type="checkbox" name="ward_preferences" value="maternity"
+                            {% if 'maternity' in profile_wards %}checked{% elif not profile and 'maternity' in session_data.ward_preferences %}checked{% endif %}>
+                        <span class="chip-inner">🤰 Maternity Ward</span>
+                    </label>
+                </div>
+                <span class="err-msg" id="err_ward" style="display:none; margin-top:8px;">⚠ Please select at least one ward</span>
+            </div>
+
+            <!-- BOTTOM ACTIONS -->
+            <div class="bottom-bar">
+                <button type="submit" name="action" value="save" class="btn-save">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save
+                </button>
+                <button type="button" class="btn-next" onclick="validateAndNext()">
+                    Next Step
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    const REQUIRED = [
+        { name: 'full_name',       grp: 'grp_full_name',       err: 'err_full_name' },
+        { name: 'age',             grp: 'grp_age',             err: 'err_age' },
+        { name: 'sex',             grp: 'grp_sex',             err: 'err_sex' },
+        { name: 'registration_no', grp: 'grp_registration_no', err: 'err_registration_no' },
+        { name: 'qualification',   grp: 'grp_qualification',   err: 'err_qualification' },
+        { name: 'experience',      grp: 'grp_experience',      err: 'err_experience' },
+        { name: 'address',         grp: 'grp_address',         err: 'err_address' },
+        { name: 'state',           grp: 'grp_state',           err: 'err_state' },
+        { name: 'city',            grp: 'grp_city',            err: 'err_city' },
+        { name: 'pincode',         grp: 'grp_pincode',         err: 'err_pincode' },
+    ];
+
+    function clearErrors() {
+        REQUIRED.forEach(f => {
+            document.getElementById(f.grp)?.classList.remove('has-error');
+            const e = document.getElementById(f.err);
+            if (e) e.style.display = 'none';
+        });
+        document.getElementById('grp_ward')?.classList.remove('has-error');
+        document.getElementById('err_ward').style.display = 'none';
+    }
+
+    function validateAndNext() {
+        clearErrors();
+        let valid = true, first = null;
+
+        REQUIRED.forEach(f => {
+            const el = document.querySelector(`[name="${f.name}"]`);
+            if (!el || !el.value.trim()) {
+                document.getElementById(f.grp)?.classList.add('has-error');
+                const e = document.getElementById(f.err);
+                if (e) e.style.display = 'block';
+                if (!first) first = el || document.getElementById(f.grp);
+                valid = false;
+            }
+        });
+
+        const wards = document.querySelectorAll('input[name="ward_preferences"]:checked');
+        if (wards.length === 0) {
+            document.getElementById('grp_ward')?.classList.add('has-error');
+            document.getElementById('err_ward').style.display = 'block';
+            if (!first) first = document.getElementById('grp_ward');
+            valid = false;
+        }
+
+        if (!valid) {
+            first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        const form = document.getElementById('step1Form');
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'action'; inp.value = 'next';
+        form.appendChild(inp);
+        form.submit();
+    }
+
+  document.addEventListener('DOMContentLoaded', () => {
+        REQUIRED.forEach(f => {
+            const el = document.querySelector(`[name="${f.name}"]`);
+            if (!el) return;
+            el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+                if (el.value.trim()) {
+                    document.getElementById(f.grp)?.classList.remove('has-error');
+                    const e = document.getElementById(f.err);
+                    if (e) e.style.display = 'none';
+                }
+            });
+        });
+
+        document.querySelectorAll('input[name="ward_preferences"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (document.querySelectorAll('input[name="ward_preferences"]:checked').length > 0) {
+                    document.getElementById('grp_ward')?.classList.remove('has-error');
+                    document.getElementById('err_ward').style.display = 'none';
+                }
+            });
+        });
+
+        // ← CITY JS ADD KARO YAHAN
+        const citySearch   = document.getElementById('city_search');
+        const cityHidden   = document.getElementById('city_hidden');
+        const cityDropdown = document.getElementById('city_dropdown');
+        let cityTimer = null;
+
+        if (citySearch) {
+            citySearch.addEventListener('input', function () {
+                const q = this.value.trim();
+                cityHidden.value = '';
+                clearTimeout(cityTimer);
+                if (q.length < 1) { cityDropdown.style.display = 'none'; return; }
+
+                cityTimer = setTimeout(() => {
+                    const state = document.querySelector('[name="state"]')?.value?.trim() || '';
+                    fetch(`/adminpanel/get-cities/?q=${encodeURIComponent(q)}&state=${encodeURIComponent(state)}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            cityDropdown.innerHTML = '';
+                            if (!data.cities.length) {
+                                cityDropdown.innerHTML = '<div class="city-no-result">No city found</div>';
+                            } else {
+                                data.cities.forEach(c => {
+                                    const div = document.createElement('div');
+                                    div.className = 'city-item';
+                                    div.textContent = `${c.name}, ${c.state}`;
+                                    div.addEventListener('click', () => {
+                                        citySearch.value = c.name;
+                                        cityHidden.value = c.name;
+                                        cityDropdown.style.display = 'none';
+                                        document.getElementById('grp_city')?.classList.remove('has-error');
+                                        document.getElementById('err_city').style.display = 'none';
+                                    });
+                                    cityDropdown.appendChild(div);
+                                });
+                            }
+                            cityDropdown.style.display = 'block';
+                        });
+                }, 300);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.city-dropdown-wrap')) {
+                    cityDropdown.style.display = 'none';
+                }
+            });
+        }
+
+    }); // DOMContentLoaded band
+    function resetForm() {
+        if (!confirm('Reset all fields?')) return;
+        document.querySelectorAll('input:not([type=submit]):not([type=checkbox])').forEach(i => i.value = '');
+        document.querySelectorAll('input[type=checkbox]').forEach(i => i.checked = false);
+        document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+        clearErrors();
+    }
+    </script>
+    </body>
+    </html>

@@ -1,0 +1,164 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block content %}
+<style>
+  .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; max-width: 650px; margin: 0 auto; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .top-bar-title { font-size: 20px; font-weight: 600; color: #111827; margin: 0; }
+  .reg-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+  .reg-card-head { padding: 16px 20px; border-bottom: 1px solid #f3f4f6; background: #fafafa; }
+  .reg-card-title { font-size: 14px; font-weight: 600; color: #111827; }
+  .reg-card-body { padding: 20px; }
+  .status-info { background: #E6F1FB; border-radius: 10px; padding: 14px 16px; margin-bottom: 24px; border: 1px solid #d0e1f3; }
+  .status-label { font-size: 12px; font-weight: 700; color: #185FA5; text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .status-text { font-size: 14px; color: #111827; font-weight: 500; }
+  .plan-option { display: flex; align-items: center; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; }
+  .plan-option:hover { background: #fafafa; border-color: #d1d5db; }
+  .plan-option input[type="radio"] { width: 18px; height: 18px; accent-color: #534AB7; cursor: pointer; }
+  .plan-info { margin-left: 12px; flex: 1; }
+  .plan-name { font-size: 14px; font-weight: 600; color: #111827; display: block; }
+  .plan-meta { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .plan-price { font-size: 14px; font-weight: 700; color: #1D9E75; }
+
+  /* Feature badges - plan create jaisa */
+  .feature-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .f-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .f-tag.green  { background: #d1fae5; color: #065f46; }
+  .f-tag.purple { background: #ede9fe; color: #5b21b6; }
+  .f-tag.gray   { background: #f3f4f6; color: #6b7280; }
+  .f-tag.red    { background: #fee2e2; color: #991b1b; }
+  .f-tag.blue   { background: #dbeafe; color: #1e40af; }
+
+  .btn-submit { background: #534AB7; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn-submit:hover { opacity: 0.9; }
+  .btn-cancel { font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; margin-left: 15px; }
+</style>
+
+<div class="dash-wrap">
+  <div class="top-bar">
+    <div class="top-bar-title">Assign Plan</div>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <span class="reg-card-title">User: {{ target_user.username }} ({{ target_user.role|title }})</span>
+    </div>
+
+    <div class="reg-card-body">
+
+      {% if current_plan %}
+      <div class="status-info">
+        <span class="status-label">Current Active Plan</span>
+        <div class="status-text">
+          <strong>{{ current_plan.plan.name }}</strong>
+          <div class="plan-meta" style="color: #475569; margin-top: 5px;">
+            {% if target_user.role == 'hospital' %}
+              Shifts: {{ current_plan.shift_post_used }}/{% if current_plan.plan.unlimited_shift_post %}∞{% else %}{{ current_plan.plan.shift_post_limit }}{% endif %} |
+              Vacancies: {{ current_plan.vacancy_post_used }}/{% if current_plan.plan.unlimited_vacancy_post %}∞{% else %}{{ current_plan.plan.vacancy_post_limit }}{% endif %}
+            {% else %}
+              Tokens: {% if current_plan.plan.token_mode == 'unlimited' %}∞ Unlimited{% else %}{{ current_plan.plan.tokens }}{% endif %} |
+              Vacancy Apply: {{ current_plan.vacancy_limit_used }}/{% if current_plan.plan.unlimited_vacancy_apply %}∞{% else %}{{ current_plan.plan.vacancy_limit }}{% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="status-info" style="background: #FFFBEB; border-color: #FEF3C7;">
+        <span class="status-label" style="color: #92400E;">Notice</span>
+        <span class="status-text" style="color: #92400E;">Is user ka koi active plan nahi hai.</span>
+      </div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <label style="font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 12px; display: block;">Select New Plan</label>
+
+        <div style="margin-bottom: 24px;">
+          {% for plan in plans %}
+          <label class="plan-option">
+            <input type="radio" name="plan_id" value="{{ plan.pk }}"
+                   {% if current_plan and current_plan.plan.pk == plan.pk %}checked{% endif %}>
+            <div class="plan-info">
+              <span class="plan-name">{{ plan.name }}</span>
+
+              {% if target_user.role == 'hospital' %}
+                <div class="feature-tags">
+                  <!-- Shift Post -->
+                  {% if plan.shift_post_enabled %}
+                    <span class="f-tag green">
+                      Shifts: {% if plan.unlimited_shift_post %}∞ Unlimited{% else %}{{ plan.shift_post_limit }}{% endif %}
+                    </span>
+                  {% else %}
+                    <span class="f-tag gray">No Shift Post</span>
+                  {% endif %}
+
+                  <!-- Vacancy Post -->
+                  {% if plan.vacancy_post_enabled %}
+                    <span class="f-tag blue">
+                      Vacancies: {% if plan.unlimited_vacancy_post %}∞ Unlimited{% else %}{{ plan.vacancy_post_limit }}{% endif %}
+                    </span>
+                  {% else %}
+                    <span class="f-tag gray">No Vacancy Post</span>
+                  {% endif %}
+                </div>
+
+              {% else %}
+                <div class="feature-tags">
+                  <!-- Tokens -->
+                  {% if plan.token_mode == 'unlimited' %}
+                    <span class="f-tag green">∞ Unlimited Tokens</span>
+                  {% elif plan.token_mode == 'fixed' %}
+                    <span class="f-tag purple">{{ plan.tokens }} Tokens</span>
+                  {% else %}
+                    <span class="f-tag red">No Tokens</span>
+                  {% endif %}
+
+                  <!-- Vacancy Apply -->
+                  {% if plan.vacancy_apply_enabled %}
+                    <span class="f-tag blue">
+                      Vacancy: {% if plan.unlimited_vacancy_apply %}∞ Unlimited{% else %}{{ plan.vacancy_limit }}{% endif %}
+                    </span>
+                  {% else %}
+                    <span class="f-tag gray">No Vacancy Apply</span>
+                  {% endif %}
+
+                  <!-- Shift View -->
+                  {% if plan.shift_view_enabled %}
+                    <span class="f-tag green">Shift View ✓</span>
+                  {% endif %}
+
+                  <!-- Urgent Shift -->
+                  {% if plan.urgent_shift_enabled %}
+                    <span class="f-tag purple">Urgent Shifts ✓</span>
+                  {% endif %}
+
+                  <!-- Shift Post -->
+                  {% if plan.shift_post_enabled %}
+                    <span class="f-tag blue">
+                      Shift Post: {% if plan.unlimited_shift_post %}∞{% else %}{{ plan.shift_post_limit }}{% endif %}
+                    </span>
+                  {% endif %}
+                </div>
+              {% endif %}
+
+            </div>
+            <div class="plan-price">₹{{ plan.price }}</div>
+          </label>
+          {% empty %}
+          <div style="text-align: center; padding: 20px; color: #9ca3af; border: 1px dashed #d1d5db; border-radius: 10px;">
+            No plans available for this role.
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if plans %}
+        <div style="display: flex; align-items: center; margin-top: 30px;">
+          <button type="submit" class="btn-submit">Assign New Plan</button>
+          <a href="{% url 'admin_user_plan_list' %}" class="btn-cancel">Cancel</a>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

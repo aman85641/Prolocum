@@ -1,0 +1,175 @@
+{% extends 'hospitals/base.html' %}
+{% block title %}Posted Vacancies{% endblock %}
+{% block page_title %}Posted Vacancies{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    /* Top Action Bar */
+    .header-flex { 
+        display: flex; justify-content: space-between; align-items: center; 
+        margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+    }
+    .header-count { font-size: 13px; color: #64748b; font-weight: 500; }
+    
+    .btn-new {
+        background: #534AB7; color: white; padding: 10px 20px; border-radius: 10px;
+        text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.2s;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-new:hover { background: #433a96; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(83, 74, 183, 0.2); }
+
+    /* Vacancy Card Styling */
+    .vacancy-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+        padding: 24px; margin-bottom: 16px; position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .vacancy-card:hover { border-color: #cbd5e1; transform: translateY(-3px); box-shadow: 0 10px 20px -10px rgba(0,0,0,0.04); }
+    .is-inactive { opacity: 0.65; background: #f8fafc; }
+
+    /* Info Sections */
+    .v-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .hosp-name { font-size: 17px; font-weight: 800; color: #1e293b; letter-spacing: -0.4px; }
+    .hosp-loc { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 16px; }
+    .tag { 
+        padding: 3px 10px; border-radius: 5px; font-size: 10px; 
+        font-weight: 800; text-transform: uppercase;
+    }
+    .tag-urgent { background: #FCEBEB; color: #E24B4A; }
+    .tag-inactive { background: #f1f5f9; color: #64748b; }
+    .tag-neutral { background: #EEEDFE; color: #534AB7; }
+
+    /* Stats Grid */
+    .stats-bar { 
+        display: flex; gap: 20px; padding: 12px 16px; 
+        background: #f8fafc; border-radius: 10px; margin-bottom: 20px;
+        border: 1px solid #f1f5f9;
+    }
+    .stat-box { display: flex; flex-direction: column; }
+    .stat-lbl { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+    .stat-val { font-size: 15px; font-weight: 800; color: #1e293b; }
+
+    /* Footer Actions */
+    .v-footer { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding-top: 16px; border-top: 1px solid #f1f5f9; 
+    }
+    .salary-text { font-size: 19px; font-weight: 800; color: #10b981; }
+
+    .btn-manage {
+        background: white; border: 1.5px solid #e2e8f0; color: #334155; 
+        padding: 8px 16px; border-radius: 8px; font-size: 12px; 
+        font-weight: 700; text-decoration: none; transition: 0.2s;
+    }
+    .btn-manage:hover { border-color: #534AB7; color: #534AB7; background: #fdfdff; }
+
+    .btn-deactivate {
+        background: transparent; border: none; color: #94a3b8; font-size: 11px; 
+        font-weight: 700; cursor: pointer; text-decoration: none; padding: 4px 8px;
+    }
+    .btn-deactivate:hover { color: #E24B4A; text-decoration: underline; }
+
+    /* Empty State */
+    .empty-card { text-align: center; padding: 70px 30px; background: #f8fafc; border-radius: 20px; border: 2px dashed #e2e8f0; }
+
+</style>
+
+<div class="dash-wrap">
+    
+    <div class="header-flex">
+        <div class="header-count">{{ vacancies.count }} active postings</div>
+        <a href="{% url 'hospital_post_vacancy' %}" class="btn-new">
+            <span>+</span> Post New Vacancy
+        </a>
+    </div>
+
+    {% if vacancies %}
+        {% for vacancy in vacancies %}
+        <div class="vacancy-card {% if not vacancy.is_active %}is-inactive{% endif %}">
+            <div class="v-header">
+                <div>
+                    <span class="hosp-name">{{ vacancy.hospital_name }}</span>
+                    <span class="hosp-loc">{{ vacancy.city }} • {{ vacancy.get_shift_type_display }}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div class="salary-text">₹{{ vacancy.salary }}</div>
+                    <div style="font-size: 9px; color: #94a3b8; font-weight: 800; text-transform: uppercase;">Per Month</div>
+                </div>
+            </div>
+<div class="tag-row">
+    {% if vacancy.is_urgent %}<span class="tag tag-urgent">Urgent Hiring</span>{% endif %}
+    {% if not vacancy.is_active %}<span class="tag tag-inactive">Closed / Inactive</span>{% endif %}
+    <span class="tag tag-neutral">{{ vacancy.get_staff_type_display }}</span>
+
+    {% if vacancy.staff_type == 'doctor' and vacancy.doctor_qualification %}
+        <span class="tag tag-neutral">{{ vacancy.get_doctor_qualification_display }}</span>
+    {% elif vacancy.staff_type == 'nurse' and vacancy.nurse_qualification %}
+        <span class="tag tag-neutral">{{ vacancy.get_nurse_qualification_display }}</span>
+    {% endif %}
+
+    {% if vacancy.designation %}<span class="tag tag-neutral" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0;">{{ vacancy.designation }}</span>{% endif %}
+     <span style="color:#94a3b8;">Posted {{ vacancy.created_at|timesince }} ago</span>
+</div>
+            
+<div style="font-size: 13px; color: #64748b; margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+    <span><strong>Joining Date:</strong> {{ vacancy.start_date|default:"Not set" }}</span>
+    <span><strong>Last Date:</strong> {{ vacancy.end_date|default:"Not set" }}</span>
+    <span><strong>Ward:</strong> {{ vacancy.get_ward_type_display|default:"General" }}</span>
+</div>
+
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <span class="stat-lbl">Applicants</span>
+                    <span class="stat-val" style="color: #534AB7;">{{ vacancy.applicant_count }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-lbl">Shortlisted</span>
+                    <span class="stat-val" style="color: #10b981;">{{ vacancy.accepted_count }}</span>
+                </div>
+                
+            </div>
+
+            <div class="v-footer">
+                <div style="font-size: 11px; color: #cbd5e1; font-weight: 600;"><div class="detail-box">
+                    <span class="detail-lbl">Shift Time</span>
+                    <span class="detail-val">
+                        {% with s=vacancy.start_time|time:"H:i" %}
+                            {% if s == "06:00" %}🌅 Morning
+                            {% elif s == "14:00" %}🌆 Evening
+                            {% elif s == "22:00" %}🌙 Night
+                            {% else %}🔄 Rotational
+                            {% endif %}
+                        {% endwith %}
+                    </span>
+                    <span style="font-size:11px; color:#94a3b8; font-weight:600;">
+                        {{ vacancy.start_time|time:"g:i A" }} – {{ vacancy.end_time|time:"g:i A" }}
+                    </span>
+                </div></div>
+                
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <a href="{% url 'vacancy_applicants' vacancy.id %}" class="btn-manage">Manage Applicants</a>
+                    
+                    {% if vacancy.is_active %}
+                    <form method="post" action="{% url 'deactivate_vacancy' vacancy.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-deactivate" onclick="return confirm('Do you want to close this vacancy?')">Deactivate</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-card">
+            <h3 style="color: #1e293b; margin-bottom: 8px; font-size: 18px; font-weight: 800;">No vacancies posted yet</h3>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">Start hiring qualified medical staff by posting your first vacancy.</p>
+            <a href="{% url 'hospital_post_vacancy' %}" class="btn-new">Create First Post</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Nurse Portal{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'users/css/base.css' %}">
+
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#0056b3">
+</head>
+
+<body>
+
+<!-- ─── SIDEBAR OVERLAY (mobile) ─── -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="window.closeSidebar()"></div>
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-icon">
+      <img src="{% static 'users/images/Black_and_White_Circular_Art___Design_Logo-removebg-preview.png' %}" alt="ProLocum Logo">
+    </div>
+    <div class="brand-text">
+      <h1>ProLocum</h1>
+      <p>Nurse Portal</p>
+    </div>
+  </div>
+
+  {% if request.user.is_authenticated %}
+  <div class="sidebar-profile">
+    <div class="profile-avatar">
+      {% if request.user.nurse_profile.full_name %}{{ request.user.nurse_profile.full_name|first|upper }}{% else %}N{% endif %}
+    </div>
+    <div class="profile-info">
+      <strong>{% if request.user.nurse_profile.full_name %}{{ request.user.nurse_profile.full_name }}{% else %}Nurse{% endif %}</strong>
+      <span>{{ request.user.nurse_profile.qualification|upper }}</span>
+    </div>
+  </div>
+  {% endif %}
+<nav class="sidebar-nav">
+<hr>
+    <div class="nav-section-label">Main</div>
+    
+    <a href="{% url 'nurse_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'nurse_dashboard' %}active{% endif %}">
+      Home
+    </a>
+
+    {% if ctx_can_view_shifts %}
+      <a href="{% url 'nurse_available_shifts' %}" class="nav-link {% if request.resolver_match.url_name == 'nurse_available_shifts' %}active{% endif %}">
+        Available Shifts
+        {% if urgent_count %}<span class="nav-badge-urgent">{{ urgent_count }}</span>{% endif %}
+      </a>
+      <a href="{% url 'nurse_my_applications' %}" class="nav-link {% if request.resolver_match.url_name == 'nurse_my_applications' %}active{% endif %}">
+        Applied Shift
+      </a>
+    {% else %}
+      <a href="{% url 'my_plans' %}" class="nav-link nav-link-locked">
+        🔒 Available Shifts <span class="nav-upgrade-tag">Upgrade</span>
+      </a>
+      <a href="{% url 'my_plans' %}" class="nav-link nav-link-locked">
+        🔒 Applied Shift <span class="nav-upgrade-tag">Upgrade</span>
+      </a>
+    {% endif %}
+<hr>
+    <div class="nav-section-label">Post a Shift</div>
+    {% if ctx_can_post_shift %}
+      <a href="{% url 'nurse_post_shift' %}" class="nav-link {% if request.resolver_match.url_name == 'nurse_post_shift' %}active{% endif %}">
+        Post New Shift
+      </a>
+      <a href="{% url 'nurse_posted_shifts' %}" class="nav-link {% if request.resolver_match.url_name == 'nurse_posted_shifts' %}active{% endif %}">
+        Posted Shifts
+      </a>
+    {% else %}
+      <a href="{% url 'my_plans' %}" class="nav-link nav-link-locked">
+        🔒 Post New Shift <span class="nav-upgrade-tag">Upgrade</span>
+      </a>
+      <a href="{% url 'my_plans' %}" class="nav-link nav-link-locked">
+        🔒 Posted Shifts <span class="nav-upgrade-tag">Upgrade</span>
+      </a>
+    {% endif %}
+<hr>
+    <div class="nav-section-label">Vacancies</div>
+    {% if ctx_can_apply_vacancy %}
+      <a href="/nurses/vacancies/" class="nav-link {% if request.resolver_match.url_name == 'nurse_available_vacancies' %}active{% endif %}">
+        Browse Vacancies
+      </a>
+      <a href="/nurses/vacancy/my-applications/" class="nav-link {% if request.resolver_match.url_name == 'nurse_my_vacancy_applications' %}active{% endif %}">
+        My Applications
+      </a>
+    {% else %}
+      <a href="{% url 'my_plans' %}" class="nav-link nav-link-locked">
+        🔒 Browse Vacancies <span class="nav-upgrade-tag">Upgrade</span>
+      </a>
+      <a href="{% url 'my_plans' %}" class="nav-link nav-link-locked">
+        🔒 My Applications <span class="nav-upgrade-tag">Upgrade</span>
+      </a>
+    {% endif %}
+<hr>
+    <div class="nav-section-label">Account</div>
+    <a href="{% url 'nurse_my_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'nurse_my_profile' %}active{% endif %}">
+      My Profile
+    </a>
+    <a href="{% url 'my_plans' %}" class="nav-link {% if request.resolver_match.url_name == 'my_plans' %}active{% endif %}">
+      My Plans
+    </a>
+    <a href="{% url 'nurse_wallet' %}" class="nav-link">
+    Wallet
+</a>
+    <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+    <hr>
+
+</nav>
+</aside>
+
+<!-- ─── BOTTOM NAV (mobile) ─── -->
+<!-- ─── BOTTOM NAV (mobile) ─── -->
+<div class="bottom-nav-wrap">
+  <svg class="nav-svg-bg" viewBox="0 0 400 80" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="
+      M0,22 Q0,10 12,10
+      L158,10 Q168,10 172,18
+      C176,26 178,0 200,0
+      C222,0 224,26 228,18
+      Q232,10 242,10
+      L388,10 Q400,10 400,22
+      L400,80 L0,80 Z
+    " fill="#1a2342"/>
+  </svg>
+
+  <!-- FAB center — Post Shift (plan check) -->
+  {% if ctx_can_post_shift %}
+  <a href="{% url 'nurse_post_shift' %}" class="nav-fab-link">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="16"/>
+      <line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    <span class="nav-fab-label">Post</span>
+  </a>
+  {% else %}
+  <a href="{% url 'my_plans' %}" class="nav-fab-link" style="background:rgba(249,115,22,0.2);">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+    <span class="nav-fab-label" style="color:#f97316;">Lock</span>
+  </a>
+  {% endif %}
+
+  <div class="nav-items">
+
+    <!-- Home -->
+    <a class="ni {% if request.resolver_match.url_name == 'nurse_dashboard' %}active{% endif %}" href="{% url 'nurse_dashboard' %}">
+      <div class="{% if request.resolver_match.url_name == 'nurse_dashboard' %}active-ring{% else %}ni-icon{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="{% if request.resolver_match.url_name == 'nurse_dashboard' %}#0fbf8f{% else %}rgba(176,190,197,0.6){% endif %}"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <span class="ni-label">Home</span>
+      <div class="ni-dot"></div>
+    </a>
+
+    <!-- Plans -->
+    <a class="ni {% if request.resolver_match.url_name == 'my_plans' %}active{% endif %}" href="{% url 'my_plans' %}">
+      <div class="{% if request.resolver_match.url_name == 'my_plans' %}active-ring{% else %}ni-icon{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="{% if request.resolver_match.url_name == 'my_plans' %}#0fbf8f{% else %}rgba(176,190,197,0.6){% endif %}"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <span class="ni-label">Plans</span>
+      <div class="ni-dot"></div>
+    </a>
+
+    <!-- GAP for FAB -->
+    <div class="ni-gap"></div>
+
+    <!-- Wallet -->
+    <a class="ni {% if request.resolver_match.url_name == 'nurse_wallet' %}active{% endif %}" href="{% url 'nurse_wallet' %}">
+    <div class="{% if request.resolver_match.url_name == 'nurse_wallet' %}active-ring{% else %}ni-icon{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="{% if request.resolver_match.url_name == 'nurse_wallet' %}#0fbf8f{% else %}rgba(176,190,197,0.6){% endif %}"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="6" width="22" height="15" rx="2"/>
+            <path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+            <path d="M1 10h22"/>
+        </svg>
+    </div>
+    <span class="ni-label">Wallet</span>
+    <div class="ni-dot"></div>
+</a>
+
+    <!-- Profile -->
+    <a class="ni {% if request.resolver_match.url_name == 'nurse_my_profile' %}active{% endif %}" href="{% url 'nurse_my_profile' %}">
+      <div class="{% if request.resolver_match.url_name == 'nurse_my_profile' %}active-ring{% else %}ni-icon{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="{% if request.resolver_match.url_name == 'nurse_my_profile' %}#0fbf8f{% else %}rgba(176,190,197,0.6){% endif %}"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <span class="ni-label">Profile</span>
+      <div class="ni-dot"></div>
+    </a>
+
+  </div>
+</div>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" id="hamburgerBtn" onclick="window.toggleSidebar()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+
+    <div class="topbar-right">
+   {% if urgent_count and ctx_can_view_shifts %}
+<span class="urgent-pill">{{ urgent_count }} Urgent</span>
+{% endif %}
+
+      {% if request.user.nurse_profile.city %}
+      <span class="city-tag">{{ request.user.nurse_profile.city }}</span>
+      {% endif %}
+
+      <div class="user-chip">
+        <div class="user-avatar">
+          {% if request.user.nurse_profile.full_name %}{{ request.user.nurse_profile.full_name|first|upper }}{% else %}{{ request.user.username|first|upper }}{% endif %}
+        </div>
+        <span class="user-name">
+          {% if request.user.nurse_profile.full_name %}{{ request.user.nurse_profile.full_name }}{% else %}{{ request.user.username }}{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">
+          {% if message.tags == 'success' %}✅{% elif message.tags == 'warning' %}⚠️{% elif message.tags == 'danger' %}❌{% else %}ℹ️{% endif %}
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+</main>
+
+<script>
+  window.toggleSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+    document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+  }
+
+  window.closeSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) window.closeSidebar();
+  });
+</script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register("{% url 'serviceworker' %}").then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+    }
+</script>
+</body>
+
+</html>

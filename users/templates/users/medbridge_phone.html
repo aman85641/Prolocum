@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProLocum – Phone Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: #060d18;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .blob1 {
+    position: fixed; width: 600px; height: 600px;
+    background: #00c896; border-radius: 50%;
+    filter: blur(160px); opacity: .06;
+    top: -200px; right: -200px; pointer-events: none;
+  }
+  .blob2 {
+    position: fixed; width: 400px; height: 400px;
+    background: #00a8ff; border-radius: 50%;
+    filter: blur(130px); opacity: .06;
+    bottom: -150px; left: -150px; pointer-events: none;
+  }
+  .bg-grid {
+    position: fixed; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+  }
+
+  /* ── Layout ── */
+  .wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    padding: 40px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  /* ── LEFT ── */
+  .left {
+    flex: 1;
+    max-width: 500px;
+    animation: fadeLeft .8s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes fadeLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 40px;
+  }
+  .brand-logo {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, #00c896, #00a8ff);
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 20px rgba(0,200,150,.3);
+  }
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 700;
+    color: #fff; letter-spacing: .3px;
+  }
+
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,200,150,.08);
+    border: 1px solid rgba(0,200,150,.2);
+    border-radius: 100px; padding: 6px 16px;
+    margin-bottom: 28px;
+  }
+  .live-badge span {
+    color: #00c896; font-size: .65rem;
+    letter-spacing: 2px; text-transform: uppercase; font-weight: 500;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #00c896;
+    animation: livePulse 2s infinite;
+  }
+  @keyframes livePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(0,200,150,.6); }
+    70%  { box-shadow: 0 0 0 7px rgba(0,200,150,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,200,150,0); }
+  }
+
+  .left h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.8rem; font-weight: 700;
+    color: #fff; line-height: 1.05;
+    margin-bottom: 16px; letter-spacing: -.5px;
+  }
+  .left h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, #00c896, #00a8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .left p {
+    color: rgba(255,255,255,.3);
+    font-size: .95rem; font-weight: 300;
+    line-height: 1.7; margin-bottom: 40px;
+    max-width: 380px;
+  }
+
+  .features {
+    display: flex; flex-direction: column; gap: 14px;
+    margin-bottom: 44px;
+  }
+  .feat {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .feat-icon {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: rgba(0,200,150,.1);
+    border: 1px solid rgba(0,200,150,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .feat-text {
+    color: rgba(255,255,255,.5);
+    font-size: .85rem;
+  }
+  .feat-text strong { color: #fff; font-weight: 500; }
+
+  .stats {
+    display: flex; gap: 32px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,.06);
+  }
+  .stat-num {
+    font-size: 1.6rem; font-weight: 600;
+    background: linear-gradient(90deg, #00c896, #00a8ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-lbl {
+    font-size: .65rem; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.28);
+    margin-top: 3px;
+  }
+
+  /* ── RIGHT — Phone ── */
+  .right {
+    flex-shrink: 0;
+    animation: fadeRight .8s .1s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes fadeRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .phone {
+    position: relative;
+    width: 320px;
+    height: 660px;
+    background: #0a0a0a;
+    border-radius: 48px;
+    border: 2px solid rgba(255,255,255,.12);
+    box-shadow:
+      0 0 0 1px rgba(0,200,150,.15),
+      0 50px 120px rgba(0,0,0,.8),
+      0 0 80px rgba(0,200,150,.08),
+      inset 0 1px 0 rgba(255,255,255,.07);
+    overflow: hidden;
+  }
+
+  .phone::before {
+    content: '';
+    position: absolute;
+    left: -4px; top: 100px;
+    width: 4px; height: 70px;
+    background: rgba(255,255,255,.08);
+    border-radius: 4px 0 0 4px;
+    box-shadow: 0 45px 0 rgba(255,255,255,.08);
+  }
+  .phone::after {
+    content: '';
+    position: absolute;
+    right: -4px; top: 120px;
+    width: 4px; height: 55px;
+    background: rgba(255,255,255,.08);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .notch {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 28px;
+    background: #0a0a0a;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    pointer-events: none;
+  }
+  .notch-cam {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .notch-bar {
+    width: 44px; height: 4px; border-radius: 3px;
+    background: #151515;
+  }
+
+  .screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 46px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .screen iframe {
+    width: 100%; height: 100%;
+    border: none; display: block;
+    pointer-events: all;
+  }
+
+  /* scroll overlay — captures wheel events */
+  .scroll-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 46px;
+    z-index: 5;
+    cursor: pointer;
+  }
+
+  .scan-card {
+    margin-top: 18px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 18px;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .qr-box {
+    width: 52px; height: 52px;
+    background: rgba(0,200,150,.1);
+    border: 1px solid rgba(0,200,150,.2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+  }
+  .scan-text strong {
+    color: #fff; font-size: .82rem; font-weight: 600; display: block;
+    margin-bottom: 3px;
+  }
+  .scan-text span {
+    color: rgba(255,255,255,.28); font-size: .68rem;
+  }
+
+  @media (max-width: 900px) {
+    .wrapper { flex-direction: column; gap: 40px; padding: 30px 20px; overflow-y: auto; }
+    .left h1 { font-size: 2.6rem; }
+    .phone { width: 280px; height: 580px; }
+    body { overflow-y: auto; }
+  }
+</style>
+
+</head>
+<body>
+
+<div class="blob1"></div>
+<div class="blob2"></div>
+<div class="bg-grid"></div>
+
+<div class="wrapper">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="brand">
+      <div class="brand-logo">🏥</div>
+      <span class="brand-name">MedBridge</span>
+    </div>
+
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span>System Live</span>
+    </div>
+
+    <h1>The Bridge to<br><em>Trusted Care</em></h1>
+    <p>Instantly connect verified doctors, nurses & hospitals on one seamless platform — built for uninterrupted medical staffing.</p>
+
+    <div class="features">
+      <div class="feat">
+        <div class="feat-icon">🩺</div>
+        <div class="feat-text"><strong>Doctor Portal</strong> — Manage shifts & patient records</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">💉</div>
+        <div class="feat-text"><strong>Nurse Portal</strong> — Track assignments & schedules</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🏥</div>
+        <div class="feat-text"><strong>Hospital Portal</strong> — Post & fill urgent vacancies</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔒</div>
+        <div class="feat-text"><strong>Role-Based Login</strong> — Secure & verified access</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div>
+        <div class="stat-num">2.4K+</div>
+        <div class="stat-lbl">Staff</div>
+      </div>
+      <div>
+        <div class="stat-num">12</div>
+        <div class="stat-lbl">Depts</div>
+      </div>
+      <div>
+        <div class="stat-num">99.8%</div>
+        <div class="stat-lbl">Uptime</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT — PHONE -->
+  <div class="right">
+    <div class="phone">
+      <div class="screen">
+        <iframe id="phoneFrame" src="{% url 'home' %}"></iframe>
+        <div class="scroll-overlay" id="scrollOverlay"></div>
+      </div>
+      <div class="notch">
+        <div class="notch-cam"></div>
+        <div class="notch-bar"></div>
+      </div>
+    </div>
+
+    <div class="scan-card">
+      <div class="qr-box">📱</div>
+      <div class="scan-text">
+        <strong>MedBridge App</strong>
+        <span>Scan to view on your mobile device</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+  const overlay  = document.getElementById('scrollOverlay');
+  const iframe   = document.getElementById('phoneFrame');
+
+  // ── Scroll: wheel pe iframe ke andar scroll forward karo
+  overlay.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    // iframe ke contentWindow mein scroll message bhejo
+    try {
+      iframe.contentWindow.scrollBy({
+        top: e.deltaY,
+        left: e.deltaX,
+        behavior: 'smooth'
+      });
+    } catch(err) {
+      // cross-origin block — same-origin pe kaam karega
+    }
+  }, { passive: false });
+
+  // ── Click: overlay pe click karo → iframe pe forward karo
+  overlay.addEventListener('click', function(e) {
+    const rect = iframe.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // overlay hide karo temporarily taaki iframe click receive kare
+    overlay.style.pointerEvents = 'none';
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (el) el.click();
+    setTimeout(() => overlay.style.pointerEvents = 'all', 100);
+  });
+
+  // ── Cursor: phone pe hover karo → pointer cursor
+  overlay.addEventListener('mousemove', function() {
+    overlay.style.cursor = 'pointer';
+  });
+</script>
+</body>
+</html>

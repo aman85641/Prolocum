@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nurse – Step 2 | ProLocum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'users/css/register.css' %}">
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="javascript:history.back()" class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+        </a>
+        <span class="page-title">Known Procedures</span>
+    </div>
+    <div class="topbar-right">
+        {% if progress > 0 %}
+        <span class="progress-label">{{ progress }}%</span>
+        <div class="progress-bar"><div class="progress-fill" style="width:{{ progress }}%"></div></div>
+        {% endif %}
+        <button class="reset-btn" type="button" onclick="resetForm()">RESET</button>
+    </div>
+</div>
+
+<!-- STEP INDICATOR -->
+<div class="step-indicator">
+    <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span>Basic Info</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item active">
+        <div class="step-dot">2</div>
+        <span>Skills</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+        <div class="step-dot">3</div>
+        <span>Documents</span>
+    </div>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+    <form method="POST" id="step2Form" novalidate>
+        {% csrf_token %}
+
+        <!-- CARD: Known Procedures -->
+        <div class="form-card" id="grp_procedures">
+            <div class="card-header">
+                <div class="card-icon">💉</div>
+                <div>
+                    <div class="card-title">Known Procedures</div>
+                    <div class="card-sub">Select all procedures you are comfortable with</div>
+                </div>
+            </div>
+
+            <!-- Hint -->
+            <div class="section-hint" style="margin-bottom: 16px;">
+                <div class="hint-title">SELECT AND TICK</div>
+                <div class="hint-sub">As per your knowledge and experience</div>
+            </div>
+
+            <div class="checkbox-list">
+                {% for procedure in procedures %}
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="{{ procedure }}"
+                        {% if procedure in selected %}checked{% endif %}>
+                    <span>{{ procedure }}</span>
+                </label>
+                {% empty %}
+                <!-- Fallback if no procedures from Django -->
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="IV Cannulation">
+                    <span>IV Cannulation</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Blood Sample Collection">
+                    <span>Blood Sample Collection</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Wound Dressing">
+                    <span>Wound Dressing</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Foley Catheter Insertion">
+                    <span>Foley Catheter Insertion</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Nasogastric Tube Insertion">
+                    <span>Nasogastric Tube Insertion</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Injection Administration">
+                    <span>Injection Administration</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Vital Signs Monitoring">
+                    <span>Vital Signs Monitoring</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="CPR">
+                    <span>CPR</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Oxygen Therapy">
+                    <span>Oxygen Therapy</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Nebulization">
+                    <span>Nebulization</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Suctioning">
+                    <span>Suctioning</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" name="procedures" value="Patient Positioning">
+                    <span>Patient Positioning</span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <span class="err-msg" id="err_procedures" style="display:none; margin-top:12px;">⚠ Please select at least one procedure</span>
+        </div>
+
+        <!-- BOTTOM ACTIONS -->
+        <div class="bottom-bar">
+            <button type="submit" name="action" value="back" class="btn-save">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Back
+            </button>
+            <button type="button" class="btn-next" onclick="validateAndNext()">
+                Next Step
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function validateAndNext() {
+    const checked = document.querySelectorAll('input[name="procedures"]:checked');
+    const errEl   = document.getElementById('err_procedures');
+    const grpEl   = document.getElementById('grp_procedures');
+
+    if (checked.length === 0) {
+        grpEl.classList.add('has-error');
+        errEl.style.display = 'block';
+        grpEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    grpEl.classList.remove('has-error');
+    errEl.style.display = 'none';
+
+    const form = document.getElementById('step2Form');
+    const inp  = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'action'; inp.value = 'next';
+    form.appendChild(inp);
+    form.submit();
+}
+
+// Real-time error clear
+document.querySelectorAll('input[name="procedures"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+        if (document.querySelectorAll('input[name="procedures"]:checked').length > 0) {
+            document.getElementById('grp_procedures')?.classList.remove('has-error');
+            document.getElementById('err_procedures').style.display = 'none';
+        }
+    });
+});
+
+function resetForm() {
+    if (!confirm('Reset all selections?')) return;
+    document.querySelectorAll('input[type=checkbox]').forEach(i => i.checked = false);
+    document.getElementById('grp_procedures')?.classList.remove('has-error');
+    document.getElementById('err_procedures').style.display = 'none';
+}
+</script>
+</body>
+</html>

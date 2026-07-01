@@ -1,0 +1,142 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block content %}
+<style>
+  /* Dashboard Match Theme */
+  .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; max-width: 750px; margin: 0 auto; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .top-bar-title { font-size: 20px; font-weight: 600; color: #111827; margin: 0; }
+  
+  /* Description Text */
+  .desc-text { font-size: 13px; color: #9ca3af; line-height: 1.5; margin-bottom: 28px; }
+
+  /* Registration Cards - Dashboard Style */
+  .reg-card { 
+    background: #fff; border: 1px solid #e5e7eb; 
+    border-radius: 12px; margin-bottom: 20px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .reg-card-head { 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 14px 18px; border-bottom: 1px solid #f3f4f6;
+    background: #fafafa;
+  }
+  .reg-card-title { font-size: 13px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .reg-card-body { padding: 20px; }
+
+  /* Form Elements */
+  .f-label { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 8px; display: block; }
+  .f-input {
+    width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #e5e7eb;
+    font-size: 14px; color: #111827; transition: border-color 0.15s;
+    outline: none;
+  }
+  .f-input:focus { border-color: #534AB7; box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.1); }
+  .f-help { font-size: 11px; color: #9ca3af; margin-top: 5px; }
+
+  /* Accent Bars */
+  .bar-purple { border-left: 4px solid #7F77DD; }
+  .bar-teal { border-left: 4px solid #1D9E75; }
+  .bar-amber { border-left: 4px solid #BA7517; }
+
+  /* Buttons */
+  .btn-save {
+    background: #111827; color: #fff; border: none;
+    padding: 12px 24px; border-radius: 9px; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-save:hover { background: #1f2937; }
+  
+  .btn-back {
+    font-size: 14px; font-weight: 500; color: #6b7280;
+    text-decoration: none; margin-left: 15px;
+  }
+
+  .row-gap { display: flex; gap: 20px; }
+  .col-flex { flex: 1; }
+
+  @media(max-width: 640px) {
+    .row-gap { flex-direction: column; gap: 15px; }
+  }
+</style>
+
+<div class="dash-wrap">
+  
+  <div class="top-bar">
+    <div class="top-bar-title">Default Registration Credits</div>
+  </div>
+
+  <p class="desc-text">
+    Jab koi naya user register karega, usse automatically niche diye gaye free credits milenge. 
+    Aap kisi bhi waqt in values ko change kar sakte hain.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="reg-card bar-purple">
+      <div class="reg-card-head">
+        <span class="reg-card-title">Doctor Settings</span>
+      </div>
+      <div class="reg-card-body">
+        <div class="row-gap">
+          <div class="col-flex">
+            <label class="f-label">Free Tokens</label>
+            <input type="number" name="doctor_tokens" class="f-input" value="{{ doctor_credit.free_tokens }}" min="0">
+            <div class="f-help">Shift apply ke liye default tokens</div>
+          </div>
+          <div class="col-flex">
+            <label class="f-label">Free Vacancy Limit</label>
+            <input type="number" name="doctor_vacancy_limit" class="f-input" value="{{ doctor_credit.free_vacancy_limit }}" min="0">
+            <div class="f-help">Vacancy apply karne ki limit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reg-card bar-teal">
+      <div class="reg-card-head">
+        <span class="reg-card-title">Nurse Settings</span>
+      </div>
+      <div class="reg-card-body">
+        <div class="row-gap">
+          <div class="col-flex">
+            <label class="f-label">Free Tokens</label>
+            <input type="number" name="nurse_tokens" class="f-input" value="{{ nurse_credit.free_tokens }}" min="0">
+          </div>
+          <div class="col-flex">
+            <label class="f-label">Free Vacancy Limit</label>
+            <input type="number" name="nurse_vacancy_limit" class="f-input" value="{{ nurse_credit.free_vacancy_limit }}" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reg-card bar-amber">
+      <div class="reg-card-head">
+        <span class="reg-card-title">Hospital Settings</span>
+      </div>
+      <div class="reg-card-body">
+        <div class="row-gap">
+          <div class="col-flex">
+            <label class="f-label">Free Shift Post Limit</label>
+            <input type="number" name="hospital_shift_limit" class="f-input" value="{{ hospital_credit.free_shift_post_limit }}" min="0">
+          </div>
+          <div class="col-flex">
+            <label class="f-label">Free Vacancy Post Limit</label>
+            <input type="number" name="hospital_vacancy_limit" class="f-input" value="{{ hospital_credit.free_vacancy_post_limit }}" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 32px; display: flex; align-items: center;">
+      <button type="submit" class="btn-save">Save New Settings</button>
+      <a href="{% url 'admin_plan_list' %}" class="btn-back">Back to Plans</a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,456 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}Shift Applicants{% endblock %}
+{% block page_title %}Shift Applicants{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+    .shift-detail-card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+    .shift-title { font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 6px 0; }
+    .shift-sub { font-size: 12px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stats-row { display: flex; gap: 24px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+    .stat-item { display: flex; flex-direction: column; }
+    .stat-val { font-size: 20px; font-weight: 800; color: #111827; }
+    .stat-lbl { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; }
+    .tab-pills { display: flex; gap: 6px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+    .atab { padding: 7px 16px; border-radius: 8px; border: 1px solid #e5e7eb; background: white; color: #6b7280; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .atab.active-tab { background: #EEEDFE; color: #534AB7; border-color: #534AB7; }
+    .acard { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .applicant-row { display: flex; gap: 12px; align-items: flex-start; }
+    .user-avatar { width: 44px; height: 44px; min-width: 44px; border-radius: 10px; background: #EEEDFE; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #534AB7; flex-shrink: 0; }
+    .applicant-info { flex: 1 !important; min-width: 0 !important; overflow: visible !important; }
+    .badge-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+    .user-name { font-size: 15px !important; font-weight: 700 !important; color: #111827 !important; word-break: break-word !important; white-space: normal !important; line-height: 1.3 !important; display: block !important; visibility: visible !important; opacity: 1 !important; }
+    .user-meta { font-size: 12px; color: #6b7280; margin-top: 3px; }
+    .badge { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+    .badge-applied { background: #EEEDFE; color: #534AB7; }
+    .badge-accepted { background: #E1F5EE; color: #1D9E75; }
+    .badge-reserved { background: #fef3c7; color: #b45309; }
+    .badge-rejected { background: #FCEBEB; color: #E24B4A; }
+    .badge-date { font-size: 10px; color: #9ca3af; white-space: nowrap; }
+    .tracker { display: flex; align-items: center; margin: 20px 0; padding: 12px 0; border-top: 1px solid #f9fafb; }
+    .t-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+    .t-step:not(:last-child)::after { content: ''; position: absolute; top: 9px; left: 50%; width: 100%; height: 2px; background: #e5e7eb; z-index: 1; }
+    .t-step.done:not(:last-child)::after { background: #534AB7; }
+    .t-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #e5e7eb; background: #fff; z-index: 2; }
+    .t-step.done .t-dot { background: #534AB7; border-color: #534AB7; }
+    .t-step.active .t-dot { border-color: #534AB7; box-shadow: 0 0 0 3px #EEEDFE; }
+    .t-lbl { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-top: 6px; }
+    .t-step.done .t-lbl, .t-step.active .t-lbl { color: #111827; }
+    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid #e5e7eb; background: white; transition: 0.15s; text-decoration: none; display: inline-block; }
+    .btn-primary-sm { background: #534AB7 !important; color: white !important; border: none !important; }
+    .review-box { padding: 14px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0; }
+    #profile-popup { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.5); backdrop-filter: blur(2px); align-items: center; justify-content: center; }
+    #profile-box { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; position: relative; }
+</style>
+
+<div class="dash-wrap">
+    <div class="shift-detail-card">
+        <div class="shift-sub">{{ shift.get_ward_type_display }} • {{ shift.city }}</div>
+        <h2 class="shift-title">{{ shift.hospital_name }}</h2>
+        <div style="font-size:13px; color:#6b7280; margin-top:4px;">
+            {{ shift.start_date }} • {{ shift.start_time|time:"g:i A" }} – {{ shift.end_time|time:"g:i A" }}
+        </div>
+        <div class="stats-row">
+            <div class="stat-item"><span class="stat-val" style="color:#534AB7;">{{ applicants_data|length }}</span><span class="stat-lbl">Applicants</span></div>
+            <div class="stat-item"><span class="stat-val" style="color:#1D9E75;">{{ shift.accepted_count }}</span><span class="stat-lbl">Accepted</span></div>
+            <div class="stat-item"><span class="stat-val" style="color:#b45309;">{{ shift.reserved_count }}</span><span class="stat-lbl">Reserved</span></div>
+        </div>
+    </div>
+
+    <div class="tab-pills">
+        <button onclick="filterApps('all')" id="tab-all" class="atab active-tab">All ({{ applicants_data|length }})</button>
+        <button onclick="filterApps('applied')" id="tab-applied" class="atab">Applied</button>
+        <button onclick="filterApps('accepted')" id="tab-accepted" class="atab">Accepted</button>
+        <button onclick="filterApps('reserved')" id="tab-reserved" class="atab">Reserved</button>
+        <button onclick="filterApps('rejected')" id="tab-rejected" class="atab">Rejected</button>
+    </div>
+
+    {% if applicants_data %}
+        {% for item in applicants_data %}
+        <div class="acard" data-status="{{ item.application.status }}">
+
+            <div class="applicant-row">
+                <div class="user-avatar">
+                    {% if item.profile %}{{ item.profile.full_name|first|upper }}{% else %}?{% endif %}
+                </div>
+                <div class="applicant-info">
+                    <div class="badge-row">
+                        <span class="badge badge-{{ item.application.status }}">{{ item.application.status }}</span>
+                        <span class="badge-date">{{ item.application.applied_at|date:"d M, g:i A" }}</span>
+                    </div>
+                    <div class="user-name">
+                        {% if item.profile %}{{ item.profile.full_name }}{% else %}{{ item.application.applicant.username }}{% endif %}
+                    </div>
+                    <div class="user-meta">
+                        {% if item.profile %}{{ item.profile.qualification|upper }} • {{ item.profile.experience|default:"0" }} yrs exp{% endif %}
+                    </div>
+                    <div style="margin-top:4px; font-size:12px;">
+                        {% if item.application.status == 'accepted' %}
+                            <span style="color:#0fbf8f; font-weight:700;">📞 {{ item.application.applicant.mobile|default:"Not available" }}</span>
+                        {% else %}
+                            <span style="color:#9ca3af;">Contact visible after acceptance</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display:flex; gap:8px; margin-top:14px; border-top:1px solid #f9fafb; padding-top:12px; justify-content:flex-end; flex-wrap:wrap;">
+                <button onclick="showProfile({{ item.application.id }})" class="btn-sm">View Profile</button>
+                {% if item.application.status != 'accepted' and item.application.status != 'withdrawn' %}
+                    <form method="post" action="{% url 'update_application_status' item.application.id %}" style="margin:0;">
+                        {% csrf_token %}<input type="hidden" name="status" value="accepted">
+                        <button type="submit" class="btn-sm" style="color:#1D9E75; border-color:#E1F5EE;">Accept</button>
+                    </form>
+                    {% if item.application.status != 'reserved' %}
+                    <form method="post" action="{% url 'update_application_status' item.application.id %}" style="margin:0;">
+                        {% csrf_token %}<input type="hidden" name="status" value="reserved">
+                        <button type="submit" class="btn-sm" style="color:#b45309; border-color:#fef3c7;">Reserve</button>
+                    </form>
+                    {% endif %}
+                    {% if item.application.status != 'rejected' %}
+                    <form method="post" action="{% url 'update_application_status' item.application.id %}" style="margin:0;">
+                        {% csrf_token %}<input type="hidden" name="status" value="rejected">
+                        <button type="submit" class="btn-sm" style="color:#E24B4A; border-color:#FCEBEB;">Reject</button>
+                    </form>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            {% if item.application.status == 'accepted' %}
+     <div class="tracker">
+{% with cur=item.application.onboard_status %}
+<div class="t-step {% if cur == 'onboarded' %}active{% elif cur in 'arrived,started,completed' %}done{% endif %}">
+    <div class="t-dot"></div><div class="t-lbl">Onboard</div>
+</div>
+<div class="t-step {% if cur == 'arrived' %}active{% elif cur in 'started,completed' %}done{% endif %}">
+    <div class="t-dot"></div><div class="t-lbl">Arrived</div>
+</div>
+<div class="t-step {% if cur == 'started' %}active{% elif cur == 'completed' %}done{% endif %}">
+    <div class="t-dot"></div><div class="t-lbl">Started</div>
+</div>
+<div class="t-step {% if cur == 'completed' %}done{% endif %}">
+    <div class="t-dot"></div><div class="t-lbl">Done</div>
+</div>
+{% endwith %}
+</div>
+
+<div style="display:flex; gap:8px; justify-content:flex-end; align-items:center; flex-wrap:wrap; margin-top:12px;">
+    {% with cur=item.application.onboard_status %}
+{% if cur == 'onboarded' %}
+            <!-- Step 1: Simple button, no OTP -->
+            <form method="post" action="{% url 'update_onboard_status' item.application.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="mark_arrived">
+                <button type="submit" class="btn-sm btn-primary-sm">
+                    📍 Mark as Arrived
+                </button>
+            </form>
+
+        {% elif cur == 'arrived' %}
+            <!-- Step 2: Send OTP → Started -->
+            <form method="post" action="{% url 'update_onboard_status' item.application.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_otp">
+                <input type="hidden" name="onboard_status" value="started">
+                <button type="submit" class="btn-sm" id="otp-btn-start-{{ item.application.id }}"
+                        onclick="startOtpCooldown(this)" style="color:#534AB7; border-color:#EEEDFE;">
+                    📲 Send Start OTP
+                </button>
+            </form>
+            <form method="post" action="{% url 'update_onboard_status' item.application.id %}" style="display:flex; gap:6px; align-items:center;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="verify_otp">
+                <input type="hidden" name="onboard_status" value="started">
+                <input type="text" name="shift_otp" placeholder="Enter Start OTP" maxlength="6"
+                       style="padding:6px 10px; border:1px solid #534AB7; border-radius:6px; font-size:12px; width:120px;">
+                <button type="submit" class="btn-sm btn-primary-sm">Start Shift</button>
+            </form>
+
+        {% elif cur == 'started' %}
+            <!-- Step 3: Send OTP → Completed -->
+            <form method="post" action="{% url 'update_onboard_status' item.application.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_otp">
+                <input type="hidden" name="onboard_status" value="completed">
+                <button type="submit" class="btn-sm" id="otp-btn-complete-{{ item.application.id }}"
+                        onclick="startOtpCooldown(this)" style="color:#1D9E75; border-color:#E1F5EE;">
+                    📲 Send Complete OTP
+                </button>
+            </form>
+            <form method="post" action="{% url 'update_onboard_status' item.application.id %}" style="display:flex; gap:6px; align-items:center;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="verify_otp">
+                <input type="hidden" name="onboard_status" value="completed">
+                <input type="text" name="shift_otp" placeholder="Enter Complete OTP" maxlength="6"
+                       style="padding:6px 10px; border:1px solid #1D9E75; border-radius:6px; font-size:12px; width:140px;">
+                <button type="submit" class="btn-sm" style="background:#1D9E75 !important; color:white !important; border:none !important;">Complete Shift</button>
+            </form>
+
+        {% elif cur == 'completed' %}
+            <span style="font-size:11px; font-weight:800; color:#1D9E75; margin-right:10px;">✅ COMPLETED</span>
+            <a href="{% url 'submit_hospital_review' item.application.id %}" class="btn-sm btn-primary-sm">
+                {% if item.hospital_reviewed %}Edit Review{% else %}Give Review{% endif %}
+            </a>
+
+            {% if not item.application.hospital_marked_paid %}
+                <button onclick="openPayModal({{ item.application.id }}, {{ item.application.shift.pay }})"
+                        style="background:#0fbf8f; color:#fff; border:none; border-radius:8px;
+                               padding:7px 14px; font-size:12px; font-weight:800; cursor:pointer;">
+                    💳 Pay Now
+                </button>
+            {% elif item.application.payment_status == 'unpaid' %}
+                <span style="font-size:11px; font-weight:700; color:#b45309;">⏳ Locum Confirmation Pending</span>
+            {% elif item.application.payment_status == 'paid' %}
+                <span style="font-size:11px; font-weight:700; color:#0fbf8f;">✅ Paid — ₹{{ item.application.shift.pay }}</span>
+            {% elif item.application.payment_status == 'disputed' %}
+                <span style="font-size:11px; font-weight:700; color:#ef4444;">⚠️ Disputed</span>
+            {% endif %}
+        {% endif %}
+
+    {% endwith %}
+</div>
+
+                {% if item.application.onboard_status == 'completed' %}
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; border-top:1px dashed #e5e7eb; padding-top:16px;">
+                    <div class="review-box" style="background:#F0FDF4; border-color:#BBF7D0;">
+                        <span style="font-size:10px; font-weight:800; color:#16A34A; text-transform:uppercase;">🏥 Your Feedback</span>
+                        {% if item.hospital_reviewed %}
+                            {% for review in item.application.reviews.all %}
+                                {% if review.reviewer_type == 'hospital' %}
+                                    <div style="margin-top:4px; display:flex; align-items:center; gap:6px;">
+                                        <span style="color:#16A34A;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                                        <span style="font-size:12px; font-weight:700;">{{ review.rating }}/5</span>
+                                    </div>
+                                    <p style="font-size:11px; color:#166534; margin-top:4px;">{{ review.comment }}</p>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p style="font-size:11px; color:#9ca3af; margin-top:8px;">No feedback given yet.</p>
+                        {% endif %}
+                    </div>
+                    <div class="review-box">
+                        <span style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">👤 Applicant's Feedback</span>
+                        {% for review in item.application.reviews.all %}
+                            {% if review.reviewer_type == 'doctor' or review.reviewer_type == 'nurse' %}
+                                <div style="margin-top:4px; display:flex; align-items:center; gap:6px;">
+                                    <span style="color:#f59e0b;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                                    <span style="font-size:12px; font-weight:700;">{{ review.rating }}/5</span>
+                                </div>
+                                <p style="font-size:11px; color:#475569; margin-top:4px; font-style:italic;">"{{ review.comment }}"</p>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align:center; padding:48px 20px; color:#9ca3af; background:#f9fafb; border-radius:12px; border:1px dashed #d1d5db;">
+            No applicants yet.
+        </div>
+    {% endif %}
+</div>
+
+<div id="profile-popup">
+    <div id="profile-box">
+        <button onclick="closeProfile()" style="position:absolute; top:12px; right:12px; border:none; background:none; cursor:pointer; color:#9ca3af; font-size:16px;">✕</button>
+        <div id="profile-content">
+            <div style="text-align:center; padding:40px; color:#9ca3af;">Loading Profile...</div>
+        </div>
+    </div>
+</div>
+<!-- QR Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Payment Modal -->
+<div id="payModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55);
+     z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:20px; padding:28px; width:320px;
+              max-width:92vw; position:relative;">
+
+    <button onclick="closePayModal()"
+            style="position:absolute; top:14px; right:16px; background:none;
+                   border:none; font-size:20px; cursor:pointer; color:#9ca3af;">✕</button>
+
+    <div style="font-size:16px; font-weight:800; margin-bottom:4px;">Payment</div>
+    <div style="font-size:13px; color:#6b7280; margin-bottom:20px;">
+        Amount: <strong id="pm_amount"></strong>
+    </div>
+
+    <!-- Step 1: Method -->
+    <div id="pm_step1">
+      <div style="font-size:13px; font-weight:700; margin-bottom:12px;">Select payment method:</div>
+      <button onclick="chooseMethod('upi')"
+              style="width:100%; padding:14px; border-radius:12px; border:1.5px solid #e5e7eb;
+                     margin-bottom:10px; font-size:14px; font-weight:700; cursor:pointer;
+                     background:#f9fafb; text-align:left; display:flex; align-items:center; gap:10px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Pay via UPI / QR Code
+      </button>
+      <button onclick="chooseMethod('cash')"
+              style="width:100%; padding:14px; border-radius:12px; border:1.5px solid #e5e7eb;
+                     font-size:14px; font-weight:700; cursor:pointer;
+                     background:#f9fafb; text-align:left; display:flex; align-items:center; gap:10px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0fbf8f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>
+          Pay in Cash
+      </button>
+    </div>
+
+    <!-- Step 2A: UPI -->
+    <div id="pm_step_upi" style="display:none; text-align:center;">
+      <div style="font-size:12px; color:#6b7280; margin-bottom:14px;">Scan the QR code and complete the payment</div>
+      <div id="pm_qr" style="display:inline-block; margin-bottom:10px;"></div>
+      <div id="pm_upi_id" style="font-size:12px; color:#6b7280; margin-bottom:16px; word-break:break-all;"></div>
+      <button onclick="confirmPaid()"
+              style="width:100%; padding:13px; border-radius:12px; background:#0fbf8f;
+                     color:#fff; border:none; font-size:14px; font-weight:800; cursor:pointer;
+                     display:flex; align-items:center; justify-content:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          I Have Paid
+      </button>
+    </div>
+
+    <!-- Step 2B: Cash -->
+    <div id="pm_step_cash" style="display:none; text-align:center;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0fbf8f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>
+      <div style="font-size:14px; font-weight:700; margin-bottom:6px;">Cash Payment</div>
+      <div style="font-size:13px; color:#6b7280; margin-bottom:20px;">Hand over the cash to the locum and confirm</div>
+      <button onclick="confirmPaid()"
+              style="width:100%; padding:13px; border-radius:12px; background:#0fbf8f;
+                     color:#fff; border:none; font-size:14px; font-weight:800; cursor:pointer;
+                     display:flex; align-items:center; justify-content:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          I Have Paid in Cash
+      </button>
+    </div>
+
+    <!-- Step 3: Done -->
+    <div id="pm_step_done" style="display:none; text-align:center;">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#0fbf8f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/></svg>
+      <div style="font-size:15px; font-weight:800; color:#0fbf8f;">Payment Marked!</div>
+      <div style="font-size:13px; color:#6b7280; margin-top:6px;">Waiting for locum confirmation</div>
+    </div>
+
+    <div id="pm_error" style="display:none; margin-top:12px; font-size:13px;
+         font-weight:700; color:#ef4444; text-align:center;"></div>
+  </div>
+</div>
+
+<script>
+let _pmAppId = null;
+
+function openPayModal(appId, amount) {
+    _pmAppId = appId;
+    document.getElementById('pm_amount').textContent = '₹' + amount;
+    ['pm_step1','pm_step_upi','pm_step_cash','pm_step_done'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+    });
+    document.getElementById('pm_step1').style.display = 'block';
+    document.getElementById('pm_error').style.display = 'none';
+    document.getElementById('pm_qr').innerHTML = '';
+    document.getElementById('payModal').style.display = 'flex';
+}
+
+function closePayModal() {
+    document.getElementById('payModal').style.display = 'none';
+}
+
+function showPmError(msg) {
+    const el = document.getElementById('pm_error');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+}
+
+function chooseMethod(method) {
+    document.getElementById('pm_error').style.display = 'none';
+    fetch(`/shifts/payment/initiate/${_pmAppId}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ method: method })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showPmError(data.error); return; }
+        document.getElementById('pm_step1').style.display = 'none';
+        if (method === 'upi') {
+            document.getElementById('pm_step_upi').style.display = 'block';
+            document.getElementById('pm_upi_id').textContent = 'UPI: ' + data.upi_id;
+            document.getElementById('pm_qr').innerHTML = '';
+            new QRCode(document.getElementById('pm_qr'), { text: data.upi_link, width: 180, height: 180 });
+        } else {
+            document.getElementById('pm_step_cash').style.display = 'block';
+        }
+    })
+    .catch(() => showPmError('Network error. Try again.'));
+}
+
+function confirmPaid() {
+    fetch(`/shifts/payment/mark-paid/${_pmAppId}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showPmError(data.error); return; }
+        ['pm_step_upi','pm_step_cash'].forEach(id => document.getElementById(id).style.display = 'none');
+        document.getElementById('pm_step_done').style.display = 'block';
+        setTimeout(() => { closePayModal(); location.reload(); }, 2000);
+    })
+    .catch(() => showPmError('Network error. Try again.'));
+}
+
+function getCookie(name) {
+    const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+}
+</script>
+<script>
+function filterApps(status) {
+    document.querySelectorAll('.acard').forEach(card => {
+        card.style.display = (status==='all' || card.dataset.status===status) ? 'block' : 'none';
+    });
+    document.querySelectorAll('.atab').forEach(btn => btn.classList.remove('active-tab'));
+    if(document.getElementById('tab-'+status)) {
+        document.getElementById('tab-'+status).classList.add('active-tab');
+    }
+}
+function showProfile(appId) {
+    document.getElementById('profile-popup').style.display = 'flex';
+    fetch(`/doctors/shifts/profile-popup/${appId}/`)
+        .then(r => r.text())
+        .then(html => { document.getElementById('profile-content').innerHTML = html; });
+}
+function closeProfile() { document.getElementById('profile-popup').style.display = 'none'; }
+
+
+function startOtpCooldown(btn) {
+    let seconds = 45;
+    const originalText = btn.textContent.trim();
+
+    // ✅ Disable ko thoda delay do (50ms), taaki form submit pehle ho jaye
+    setTimeout(() => {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+    }, 50);
+
+    const interval = setInterval(() => {
+        btn.textContent = `⏳ Resend in ${seconds}s`;
+        seconds--;
+        if (seconds < 0) {
+            clearInterval(interval);
+            btn.textContent = originalText;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+        }
+    }, 1000);
+
+    return true;
+}
+
+</script>
+{% endblock %}

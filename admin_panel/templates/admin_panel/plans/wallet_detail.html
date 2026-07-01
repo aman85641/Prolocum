@@ -1,0 +1,181 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block content %}
+<style>
+  /* Dashboard Match Theme */
+  .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; max-width: 750px; margin: 0 auto; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .top-bar-title { font-size: 22px; font-weight: 600; color: #111827; margin: 0; }
+  
+  /* Profile/Wallet Card - Dashboard Style */
+  .reg-card { 
+    background: #fff; border: 1px solid #e5e7eb; 
+    border-radius: 12px; margin-bottom: 20px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .reg-card-head { 
+    padding: 14px 18px; border-bottom: 1px solid #f3f4f6;
+    background: #fafafa; display: flex; align-items: center; gap: 8px;
+  }
+  .reg-card-title { font-size: 14px; font-weight: 600; color: #111827; }
+
+  .reg-card-body { padding: 24px; }
+
+  /* Wallet Balance Display */
+  .balance-circle {
+    background: #EEEDFE; width: 100px; height: 100px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin: 0 auto 10px; border: 2px solid #534AB7;
+  }
+  .bal-val { font-size: 28px; font-weight: 800; color: #534AB7; line-height: 1; }
+  .bal-lbl { font-size: 10px; font-weight: 700; color: #7F77DD; text-transform: uppercase; margin-top: 4px; }
+
+  /* Form Elements */
+  .f-label { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; display: block; }
+  .f-input {
+    width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #e5e7eb;
+    font-size: 14px; color: #111827; transition: border-color 0.15s; outline: none;
+  }
+  .f-input:focus { border-color: #534AB7; box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.1); }
+
+  /* History Table */
+  .desktop-table { width: 100%; }
+  .desktop-table table { width: 100%; border-collapse: collapse; }
+  .desktop-table th { 
+    font-size: 11px; font-weight: 700; color: #9ca3af; 
+    text-transform: uppercase; padding: 11px 18px; text-align: left; border-bottom: 1px solid #f3f4f6;
+  }
+  .desktop-table td { 
+    padding: 13px 18px; font-size: 13px; color: #111827; border-bottom: 1px solid #f9fafb;
+  }
+
+  /* Custom Badges */
+  .tx-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+  .bg-plus { background: #EAF3DE; color: #27500A; }
+  .bg-minus { background: #FCEBEB; color: #A32D2D; }
+
+  /* Action Buttons */
+  .btn-action {
+    padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    border: none; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-add { background: #1D9E75; color: #fff; }
+  .btn-deduct { background: #E24B4A; color: #fff; }
+  .view-btn { 
+    font-size: 12px; font-weight: 500; padding: 5px 12px; 
+    border-radius: 7px; border: 1px solid #e5e7eb; background: #fff; color: #374151; text-decoration: none;
+  }
+
+  @media(max-width: 640px) {
+    .f-row { flex-direction: column; }
+    .btn-action { width: 100%; }
+  }
+</style>
+
+<div class="dash-wrap">
+  
+  <div class="top-bar">
+    <div class="top-bar-title">Wallet Management</div>
+    <a href="{% url 'admin_wallet_list' %}" class="view-btn">Back to Wallets</a>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <span class="reg-card-title">User Wallet Info</span>
+    </div>
+    <div class="reg-card-body">
+      <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap;">
+        <div style="text-align: center; flex: 1; min-width: 150px;">
+          <div class="balance-circle">
+            <span class="bal-val">{{ wallet.balance }}</span>
+            <span class="bal-lbl">Tokens</span>
+          </div>
+        </div>
+        <div style="flex: 2; min-width: 250px;">
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 700;">Account Owner</span>
+            <div style="font-size: 18px; font-weight: 700; color: #111827;">{{ target_user.username }}</div>
+          </div>
+          <div style="display: flex; gap: 40px;">
+            <div>
+              <span style="font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 700;">Role</span>
+              <div style="font-size: 14px; font-weight: 600; color: #534AB7;">{{ target_user.role|title }}</div>
+            </div>
+            <div>
+              <span style="font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 700;">Member Since</span>
+              <div style="font-size: 14px; font-weight: 600;">{{ target_user.date_joined|date:"d M Y" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <span class="reg-card-title">Manual Adjustments</span>
+    </div>
+    <div class="reg-card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;" class="f-row">
+          <div style="flex: 1;">
+            <label class="f-label">Token Amount</label>
+            <input type="number" name="amount" class="f-input" min="1" placeholder="0" required>
+          </div>
+          <div style="flex: 2;">
+            <label class="f-label">Adjustment Note</label>
+            <input type="text" name="note" class="f-input" placeholder="E.g. Bonus for verification">
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: 8px;">
+            <button type="submit" name="action" value="add" class="btn-action btn-add">+ Add</button>
+            <button type="submit" name="action" value="deduct" class="btn-action btn-deduct" onclick="return confirm('Deduct tokens?')">- Deduct</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-label">Transaction History</span>
+  </div>
+  <div class="reg-card">
+    <div class="desktop-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in transactions %}
+          <tr>
+            <td style="color: #9ca3af; font-size: 12px;">{{ tx.created_at|date:"d M Y, H:i" }}</td>
+            <td>
+              {% if tx.transaction_type == 'credit' %}
+                <span class="tx-badge bg-plus">+ Credit</span>
+              {% else %}
+                <span class="tx-badge bg-minus">- Debit</span>
+              {% endif %}
+            </td>
+            <td><strong style="color: #111827;">{{ tx.amount }}</strong> tokens</td>
+            <td style="color: #6b7280; font-style: italic;">{{ tx.note|default:"-" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 40px; color: #9ca3af;">
+              No recent transactions found for this wallet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

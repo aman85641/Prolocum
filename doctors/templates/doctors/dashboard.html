@@ -1,0 +1,1606 @@
+{% extends 'doctors/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* ── Base ─────────────────────────────────────────────────── */
+    .dash-wrap {
+        padding: 0 0 32px;
+        font-family: 'Inter', sans-serif;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    /* ── Hero Card ───────────────────────────────────────────── */
+    .hero-card {
+        background: #2971F0;
+        border-radius: 20px;
+        padding: 22px 20px 24px;
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-greet {
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(176, 190, 197, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .hero-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: #fff;
+        margin-top: 3px;
+    }
+
+    .hero-verified {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(15, 191, 143, 0.15);
+        border: 1px solid rgba(15, 191, 143, 0.3);
+        border-radius: 20px;
+        padding: 4px 10px;
+        margin-top: 10px;
+    }
+
+    .hero-verified-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #0fbf8f;
+    }
+
+    .hero-verified span {
+        font-size: 10px;
+        color: white;
+        font-weight: 700;
+    }
+
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #0fbf8f;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-size: 12px;
+        font-weight: 800;
+        margin-top: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.15s;
+    }
+
+    .hero-btn:hover {
+        background: #0aa87d;
+        color: #fff;
+    }
+
+    .hero-avatar {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #E1F5EE;
+        border: 2.5px solid #0fbf8f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0F6E56;
+        overflow: hidden;
+    }
+
+    .hero-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    /* ── Setup Guide ─────────────────────────────────────────── */
+    .setup-guide {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 18px 16px 14px;
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .setup-guide::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #0fbf8f, #3b82f6);
+    }
+
+    .setup-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .setup-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .setup-subtitle {
+        font-size: 10px;
+        color: #9ca3af;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .setup-progress-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .setup-progress-bar-bg {
+        width: 80px;
+        height: 5px;
+        background: #f3f4f6;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+
+    .setup-progress-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, #0fbf8f, #3b82f6);
+        transition: width 0.4s ease;
+    }
+
+    .setup-progress-text {
+        font-size: 10px;
+        font-weight: 800;
+        color: #0fbf8f;
+        white-space: nowrap;
+    }
+
+    .setup-steps-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .setup-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f9fafb;
+        text-decoration: none;
+        color: inherit;
+        transition: 0.15s;
+    }
+
+    .setup-step:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .setup-step:hover .setup-step-title {
+        color: #0fbf8f;
+    }
+
+    .setup-step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+
+    .step-done .setup-step-icon {
+        background: #E1F5EE;
+    }
+
+    .step-todo .setup-step-icon {
+        background: #f3f4f6;
+    }
+
+    .setup-step-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .setup-step-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #111827;
+        transition: color 0.15s;
+    }
+
+    .step-done .setup-step-title {
+        color: #6b7280;
+        text-decoration: line-through;
+    }
+
+    .setup-step-desc {
+        font-size: 10px;
+        color: #9ca3af;
+        margin-top: 1px;
+    }
+
+    .setup-step-check {
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .step-done .setup-step-check .check-circle {
+        display: flex;
+    }
+
+    .step-done .setup-step-check .check-empty {
+        display: none;
+    }
+
+    .step-todo .setup-step-check .check-circle {
+        display: none;
+    }
+
+    .step-todo .setup-step-check .check-empty {
+        display: flex;
+    }
+
+    .check-circle {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #0fbf8f;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .check-empty {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ── Urgent Shifts ───────────────────────────────────────── */
+    .urgent-section {
+        margin-bottom: 20px;
+    }
+
+    .urgent-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .urgent-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .urgent-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #ef4444;
+        animation: pulse-red 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-red {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(1.4);
+        }
+    }
+
+    .urgent-see-all {
+        font-size: 10px;
+        font-weight: 700;
+        color: #0fbf8f;
+        text-decoration: none;
+    }
+
+    .urgent-see-all:hover {
+        text-decoration: underline;
+    }
+
+    .urgent-card {
+        background: #fff;
+        border: 1px solid #fecaca;
+        border-left: 4px solid #ef4444;
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: 0.15s;
+    }
+
+    .urgent-card:hover {
+        border-color: #fca5a5;
+        border-left-color: #dc2626;
+        background: #fff7f7;
+        transform: translateY(-1px);
+    }
+
+    .urgent-card-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .urgent-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        padding: 2px 7px;
+        font-size: 9px;
+        font-weight: 800;
+        color: #dc2626;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .urgent-hosp {
+        font-size: 14px;
+        font-weight: 800;
+        color: #111827;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 4px;
+    }
+
+    .urgent-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .urgent-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 11px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .urgent-meta-item svg {
+        flex-shrink: 0;
+    }
+
+    .urgent-card-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .urgent-pay {
+        font-size: 15px;
+        font-weight: 800;
+        color: #0fbf8f;
+        white-space: nowrap;
+    }
+
+    .urgent-pay-label {
+        font-size: 9px;
+        color: #9ca3af;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .urgent-ward {
+        display: inline-block;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 10px;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+
+    .urgent-empty {
+        background: #f9fafb;
+        border: 1px dashed #e5e7eb;
+        border-radius: 14px;
+        padding: 20px;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* ── Stats ───────────────────────────────────────────────── */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .sc {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 16px;
+        border: 1px solid #e5e7eb;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sc-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        border-radius: 3px 0 0 3px;
+    }
+
+    .sc-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .sc-val {
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-top: 4px;
+    }
+
+    .section-label {
+        font-size: 10px;
+        font-weight: 800;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+
+    /* ── Quick Actions ───────────────────────────────────────── */
+    .qa-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .qa {
+        background: #fff;
+        border-radius: 16px;
+        padding: 18px 16px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: 0.15s;
+    }
+
+    .qa:hover {
+        border-color: #d1d5db;
+        background: #fafafa;
+        transform: translateY(-1px);
+    }
+
+    .qa-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .qa-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.3;
+    }
+
+    .ic-teal {
+        background: #E1F5EE;
+    }
+
+    .ic-blue {
+        background: #E6F1FB;
+    }
+
+    .ic-purple {
+        background: #EEEDFE;
+    }
+
+    .ic-orange {
+        background: #FAEEDA;
+    }
+
+    .ic-pink {
+        background: #FBEAF0;
+    }
+
+    .ic-green {
+        background: #EAF3DE;
+    }
+
+    @media(min-width: 600px) {
+        .dash-wrap {
+            max-width: 100%;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .qa-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+   GUIDED TOUR STYLES
+   ══════════════════════════════════════════════════════════ */
+
+    /* Backdrop overlay */
+    #tour-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 15, 35, 0.6);
+        z-index: 900;
+        pointer-events: none;
+        backdrop-filter: blur(1px);
+        -webkit-backdrop-filter: blur(1px);
+        transition: opacity 0.3s ease;
+    }
+
+    #tour-backdrop.active {
+        display: block;
+    }
+
+    /* Highlighted element ring */
+    .tour-highlight {
+        position: relative !important;
+        z-index: 950 !important;
+        border-radius: 16px;
+        box-shadow:
+            0 0 0 3px #0fbf8f,
+            0 0 0 8px rgba(15, 191, 143, 0.2),
+            0 0 32px rgba(15, 191, 143, 0.15) !important;
+        transition: box-shadow 0.3s ease !important;
+    }
+
+    /* Tooltip card */
+    #tour-tooltip {
+        display: none;
+        position: fixed;
+        z-index: 1100;
+        width: 300px;
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.08),
+            0 16px 48px rgba(0, 0, 0, 0.18);
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        overflow: hidden;
+        transition: top 0.25s ease, left 0.25s ease;
+        pointer-events: all;
+    }
+
+    #tour-tooltip.active {
+        display: block;
+    }
+
+    /* Tooltip top accent bar */
+    .tt-accent-bar {
+        height: 3px;
+        background: linear-gradient(90deg, #0fbf8f, #3b82f6);
+        border-radius: 18px 18px 0 0;
+    }
+
+    .tt-body {
+        padding: 16px 18px 14px;
+    }
+
+    .tt-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .tt-step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #E1F5EE;
+        border-radius: 20px;
+        padding: 3px 10px;
+    }
+
+    .tt-step-badge-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #0fbf8f;
+        animation: pulse-green 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-green {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.6;
+            transform: scale(1.4);
+        }
+    }
+
+    .tt-step-text {
+        font-size: 10px;
+        font-weight: 800;
+        color: #0fbf8f;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+
+    .tt-close {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 14px;
+        line-height: 1;
+        transition: 0.15s;
+    }
+
+    .tt-close:hover {
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .tt-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: #E1F5EE;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .tt-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+
+    .tt-desc {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.65;
+    }
+
+    .tt-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+    }
+
+    .tt-dots {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    .tt-dot {
+        height: 5px;
+        border-radius: 99px;
+        background: #e5e7eb;
+        transition: all 0.25s ease;
+        width: 5px;
+    }
+
+    .tt-dot.active {
+        background: #0fbf8f;
+        width: 18px;
+    }
+
+    .tt-actions {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+    }
+
+    .tt-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 8px 16px;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.15s;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .tt-btn-skip {
+        background: #f3f4f6;
+        color: #9ca3af;
+    }
+
+    .tt-btn-skip:hover {
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .tt-btn-prev {
+        background: #f3f4f6;
+        color: #374151;
+        display: none;
+    }
+
+    .tt-btn-prev:hover {
+        background: #e5e7eb;
+    }
+
+    .tt-btn-prev.visible {
+        display: inline-flex;
+    }
+
+    .tt-btn-next {
+        background: linear-gradient(135deg, #0fbf8f, #0aa87d);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .tt-btn-next:hover {
+        background: linear-gradient(135deg, #0aa87d, #098f6b);
+        transform: translateY(-1px);
+    }
+
+    /* Tooltip arrow pointer */
+    .tt-arrow-wrap {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        overflow: visible;
+        pointer-events: none;
+    }
+
+    .tt-arrow-inner {
+        width: 12px;
+        height: 12px;
+        background: #fff;
+        transform: rotate(45deg);
+        position: absolute;
+    }
+
+    /* top arrow (tooltip below element) */
+    .tt-arrow-wrap.arrow-top {
+        top: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .tt-arrow-wrap.arrow-top .tt-arrow-inner {
+        bottom: -6px;
+        left: 1px;
+        box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    /* bottom arrow (tooltip above element) */
+    .tt-arrow-wrap.arrow-bottom {
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .tt-arrow-wrap.arrow-bottom .tt-arrow-inner {
+        top: -6px;
+        left: 1px;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* ── Floating Start Button ───────────────────────────────── */
+    #tour-start-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 16px;
+        background: #1a2342;
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 11px 18px 11px 14px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        z-index: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 20px rgba(26, 35, 66, 0.4);
+        font-family: 'Inter', sans-serif;
+        transition: 0.2s;
+    }
+
+    #tour-start-btn:hover {
+        background: #252f50;
+        box-shadow: 0 6px 24px rgba(26, 35, 66, 0.5);
+        transform: translateY(-1px);
+    }
+
+    #tour-start-btn .tour-btn-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(15, 191, 143, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    #tour-start-btn .tour-btn-arr {
+        animation: arr-bounce 1.6s ease-in-out infinite;
+    }
+
+    @keyframes arr-bounce {
+
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+
+        50% {
+            transform: translateX(3px);
+        }
+    }
+
+    /* ── Tour progress bar (top of screen) ──────────────────── */
+    #tour-progress-bar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #0fbf8f, #3b82f6);
+        z-index: 1050;
+        border-radius: 0 99px 99px 0;
+        transition: width 0.4s ease;
+    }
+
+    #tour-progress-bar.active {
+        display: block;
+    }
+
+    /* ── Tour completion toast ───────────────────────────────── */
+    #tour-toast {
+        display: none;
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1a2342;
+        color: #fff;
+        border-radius: 14px;
+        padding: 12px 20px;
+        font-size: 12px;
+        font-weight: 700;
+        z-index: 1200;
+        white-space: nowrap;
+        box-shadow: 0 8px 32px rgba(26, 35, 66, 0.4);
+        animation: toast-in 0.4s ease;
+        font-family: 'Inter', sans-serif;
+    }
+
+    @keyframes toast-in {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DASHBOARD HTML
+     ═══════════════════════════════════════════════════════════ -->
+<div class="dash-wrap">
+
+    <!-- Hero Card -->
+    <div class="hero-card" id="tour-hero">
+        <div class="hero-greet">Welcome back,</div>
+        <div class="hero-name">{{ request.user.doctor_profile.full_name|default:request.user.username }}</div>
+        <div class="hero-verified">
+    <div class="hero-verified-dot"></div>
+    <span>{% if request.user.doctor_profile.verification_status == 'approved' %}Verified Doctor{% else %}Verification Pending{% endif %}</span>
+</div>
+        <br>
+       {% if can_view_shifts %}
+<a href="{% url 'available_shifts' %}" class="hero-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    View Shifts
+</a>
+{% else %}
+<a href="{% url 'my_plans' %}" class="hero-btn" ">
+     Unlock Shifts
+</a>
+{% endif %}
+        <div class="hero-avatar">
+            {% if request.user.doctor_profile.profile_photo %}
+            <img src="{{ request.user.doctor_profile.profile_photo.url }}">
+            {% else %}
+            {{ request.user.doctor_profile.full_name|first|upper|default:"D" }}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Setup Guide -->
+    {% if show_setup_guide %}
+    <div class="setup-guide" id="tour-setup">
+        <div class="setup-top">
+            <div>
+                <div class="setup-title">🚀 Getting Started</div>
+                <div class="setup-subtitle">Complete these steps to get going</div>
+            </div>
+            <div class="setup-progress-wrap">
+                <div class="setup-progress-bar-bg">
+                    <div class="setup-progress-bar-fill" style="width:{% widthratio steps_done steps_total 100 %}%">
+                    </div>
+                </div>
+                <div class="setup-progress-text">{{ steps_done }}/{{ steps_total }}</div>
+            </div>
+        </div>
+        <div class="setup-steps-list">
+            {% for step in setup_steps %}
+            <a href="{{ step.url }}" class="setup-step {% if step.done %}step-done{% else %}step-todo{% endif %}">
+                <div class="setup-step-icon">
+                    {% if step.icon == 'user' %}👤
+                    {% elif step.icon == 'doc' %}📄
+                    {% elif step.icon == 'shield' %}🛡️
+                    {% elif step.icon == 'shift' %}🏥
+                    {% elif step.icon == 'apply' %}✍️
+                    {% else %}⭐{% endif %}
+                </div>
+                <div class="setup-step-body">
+                    <div class="setup-step-title">Step {{ step.number }} — {{ step.title }}</div>
+                    <div class="setup-step-desc">{{ step.desc }}</div>
+                </div>
+                <div class="setup-step-check">
+                    <div class="check-circle">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                    <div class="check-empty"></div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Urgent Shifts -->
+{% if urgent_shifts and can_view_urgent %}
+<div class="urgent-section" id="tour-urgent">
+    <div class="urgent-header">
+        <div class="urgent-label">
+            <div class="urgent-dot"></div>
+            Urgent Shifts
+            {% if urgent_count > 0 %}
+            <span style="background:#fef2f2;color:#dc2626;border-radius:20px;padding:1px 7px;font-size:9px;font-weight:800;">{{ urgent_count }}</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'available_shifts' %}" class="urgent-see-all">See all →</a>
+    </div>
+    {% for shift in urgent_shifts %}
+    <a href="{% url 'shift_detail' shift.id %}" class="urgent-card">
+        <div class="urgent-card-left">
+            <div class="urgent-badge">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="#dc2626"><circle cx="12" cy="12" r="10"/></svg>
+                Urgent
+            </div>
+            <div class="urgent-hosp">{{ shift.hospital_name }}</div>
+            <div class="urgent-meta">
+                <div class="urgent-meta-item">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {{ shift.city }}
+                </div>
+                <div class="urgent-meta-item">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {{ shift.start_time|time:"g:i A" }} – {{ shift.end_time|time:"g:i A" }}
+                </div>
+                <div class="urgent-meta-item">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {{ shift.start_date|date:"d M" }}
+                </div>
+            </div>
+            <div class="urgent-ward">{{ shift.get_ward_type_display }}</div>
+        </div>
+        <div class="urgent-card-right">
+            <div class="urgent-pay">₹{{ shift.pay }}</div>
+            <div class="urgent-pay-label">per shift</div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% elif can_view_shifts and not can_view_urgent %}
+<!-- Shift access hai but urgent feature nahi -->
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+    <span style="font-size:20px;">📋</span>
+    <div>
+        <div style="font-size:13px;font-weight:700;color:#166534;">Shifts Available</div>
+        <div style="font-size:11px;color:#15803d;margin-top:3px;">Buy a Plan To unlock Urgent Shifts System</div>
+    </div>
+    <a href="{% url 'my_plans' %}" style="margin-left:auto;background:#16a34a;color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;">Upgrade →</a>
+</div>
+
+{% elif not can_view_shifts %}
+<!-- Koi plan nahi / shift access nahi -->
+<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+    <span style="font-size:22px;">🔒</span>
+    <div>
+        <div style="font-size:13px;font-weight:700;color:#92400e;">Shifts Locked</div>
+        <div style="font-size:11px;color:#b45309;margin-top:3px;">Buy a Plan To unlock Urgent Shifts System</div>
+    </div>
+    <a href="{% url 'my_plans' %}" style="margin-left:auto;background:#f97316;color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;">Upgrade →</a>
+</div>
+{% endif %}
+
+    <!-- Stats -->
+    <div class="stats-grid" id="tour-stats">
+        <div class="sc">
+            <div class="sc-bar" style="background:#3b82f6"></div>
+            <div class="sc-label">Available</div>
+            <div class="sc-val" style="color:#1a56db">{{ available_count|default:"0" }}</div>
+        </div>
+        <div class="sc">
+            <div class="sc-bar" style="background:#8b5cf6"></div>
+            <div class="sc-label">Applied</div>
+            <div class="sc-val" style="color:#534AB7">{{ applied_count|default:"0" }}</div>
+        </div>
+        <div class="sc">
+            <div class="sc-bar" style="background:#0fbf8f"></div>
+            <div class="sc-label">Selected</div>
+            <div class="sc-val" style="color:#0fbf8f">{{ selected_count|default:"0" }}</div>
+        </div>
+        <div class="sc">
+            <div class="sc-bar" style="background:#f59e0b"></div>
+            <div class="sc-label">Posted</div>
+            <div class="sc-val" style="color:#d97706">{{ posted_count|default:"0" }}</div>
+        </div>
+    </div>
+
+  <!-- Quick Actions -->
+<div class="section-label">Quick Actions</div>
+<div class="qa-grid" id="tour-actions">
+
+    {% if can_view_shifts %}
+    <a href="{% url 'available_shifts' %}" class="qa">
+        <div class="qa-icon ic-teal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+        </div>
+        <div class="qa-name">Available Shifts</div>
+    </a>
+    <a href="{% url 'my_applications' %}" class="qa">
+        <div class="qa-icon ic-orange">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+        </div>
+        <div class="qa-name">Applied Shift</div>
+    </a>
+    {% else %}
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-teal" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Available Shift</div>
+    </a>
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-orange" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">My Application</div>
+    </a>
+    {% endif %}
+
+    {% if can_post_shift %}
+    <a href="{% url 'post_new_shift' %}" class="qa">
+        <div class="qa-icon ic-purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+        </div>
+        <div class="qa-name">Post New Shift</div>
+    </a>
+    <a href="{% url 'posted_shifts' %}" class="qa">
+        <div class="qa-icon ic-blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+            </svg>
+        </div>
+        <div class="qa-name">Posted Shift</div>
+    </a>
+    {% else %}
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-purple" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Post New Shift</div>
+    </a>
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-blue" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Posted Shift</div>
+    </a>
+    {% endif %}
+
+    {% if can_apply_vacancy %}
+    <a href="/doctors/vacancies/" class="qa">
+        <div class="qa-icon ic-pink">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#993556" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </div>
+        <div class="qa-name">Browse Vacancies</div>
+    </a>
+    {% else %}
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-pink" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Browse Vacancies</div>
+    </a>
+    {% endif %}
+
+    <!-- Profile — hamesha visible -->
+    <a href="{% url 'doctor_my_profile' %}" class="qa">
+        <div class="qa-icon ic-green">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+        </div>
+        <div class="qa-name">My Profile</div>
+    </a>
+
+</div>
+
+    <!-- Copyright -->
+    <div style="text-align:center; margin-top:28px; padding-top:16px; border-top:1px solid #f3f4f6;">
+        <div style="font-size:11px; color:#9ca3af; font-weight:600; letter-spacing:0.3px;">
+            © {% now "Y" %} <span style="color:#0fbf8f; font-weight:800;">ProLocum</span> &nbsp;·&nbsp; All rights
+            reserved
+        </div>
+        <div style="font-size:10px; color:#d1d5db; margin-top:3px; font-weight:500;">
+            Connecting Healthcare Professionals
+        </div>
+    </div>
+
+</div><!-- /.dash-wrap -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     GUIDED TOUR  —  DOM Elements
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- Top progress bar -->
+<div id="tour-progress-bar"></div>
+
+<!-- Dark backdrop -->
+<div id="tour-backdrop"></div>
+
+<!-- Tooltip -->
+<div id="tour-tooltip" role="dialog" aria-modal="true" aria-label="Guided Tour">
+    <div class="tt-accent-bar"></div>
+    <div class="tt-body">
+        <div class="tt-header">
+            <div class="tt-step-badge">
+                <div class="tt-step-badge-dot"></div>
+                <span class="tt-step-text" id="tt-step-text">Step 1 of 5</span>
+            </div>
+            <button class="tt-close" id="tt-close" aria-label="Close tour">✕</button>
+        </div>
+        <div class="tt-icon" id="tt-icon">🏠</div>
+        <div class="tt-title" id="tt-title">Title</div>
+        <div class="tt-desc" id="tt-desc">Description</div>
+        <div class="tt-footer">
+            <div class="tt-dots" id="tt-dots"></div>
+            <div class="tt-actions">
+                <button class="tt-btn tt-btn-skip" id="tt-skip">Skip tour</button>
+                <button class="tt-btn tt-btn-prev" id="tt-prev" aria-label="Previous step">← Back</button>
+                <button class="tt-btn tt-btn-next" id="tt-next">
+                    Next
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Arrow pointer (position set by JS) -->
+    <div class="tt-arrow-wrap" id="tt-arrow">
+        <div class="tt-arrow-inner"></div>
+    </div>
+</div>
+
+<!-- Floating "Start Tour" button -->
+<button id="tour-start-btn" aria-label="Start guided tour">
+    <div class="tour-btn-icon">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0fbf8f" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="10 8 16 12 10 16 10 8" fill="#0fbf8f" stroke="none" />
+        </svg>
+    </div>
+    Tour Guide
+    <svg class="tour-btn-arr" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+</button>
+
+<!-- Completion toast -->
+<div id="tour-toast">🎉 Tour complete! You're all set.</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     GUIDED TOUR  —  JavaScript
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+    (function () {
+        'use strict';
+
+        /* ── Step Definitions ──────────────────────────────────── *
+         *  id       → matches the id="..." on the target element   *
+         *  title    → tooltip heading                              *
+         *  desc     → explanation text                             *
+         *  icon     → emoji shown inside the icon box             *
+         *  pos      → 'bottom' | 'top' (tooltip placement)        *
+         *  optional → if true, skip silently when el not in DOM   *
+         * ─────────────────────────────────────────────────────── */
+        var STEPS = [
+            {
+                id: 'tour-hero',
+                title: 'Your Profile Card',
+                desc: 'Your name, verification badge, and the View Shifts button are here. Tap the avatar in the top-right corner to update your profile photo.',
+                icon: '👤',
+                pos: 'bottom'
+            },
+            {
+                id: 'tour-setup',
+                title: 'Getting Started Checklist',
+                desc: 'Complete these 5 steps to finish your first-time setup — profile details, documents, and verification. The progress bar updates automatically.',
+                icon: '🚀',
+                pos: 'bottom',
+                optional: true
+            },
+            {
+                id: 'tour-urgent',
+                title: 'Urgent Shifts — Apply Quickly!',
+                desc: 'The blinking red dot means these shifts need to be filled today or tomorrow. The pay rate is shown right here — one tap opens the detail page.',
+                icon: '🚨',
+                pos: 'bottom',
+                optional: true
+            },
+            {
+                id: 'tour-stats',
+                title: 'Your Shift Activity',
+                desc: 'Available, Applied, Selected, and Posted — all four numbers update in real time. Keep track of your progress here.',
+                icon: '📊',
+                pos: 'bottom'
+            },
+            {
+                id: 'tour-actions',
+                title: 'Quick Actions Grid',
+                desc: 'The most common tasks in just one tap — browse shifts, apply, post a new shift, view vacancies, or update your profile.',
+                icon: '⚡',
+                pos: 'top'
+            }
+        ];
+        /* ── State ─────────────────────────────────────────────── */
+        var steps = [];   // filtered (optional ones removed if absent)
+        var current = 0;
+        var activeEl = null;
+        var running = false;
+
+        /* ── DOM refs ──────────────────────────────────────────── */
+        var backdrop = document.getElementById('tour-backdrop');
+        var tooltip = document.getElementById('tour-tooltip');
+        var progBar = document.getElementById('tour-progress-bar');
+        var startBtn = document.getElementById('tour-start-btn');
+        var toast = document.getElementById('tour-toast');
+
+        var ttStepTxt = document.getElementById('tt-step-text');
+        var ttIcon = document.getElementById('tt-icon');
+        var ttTitle = document.getElementById('tt-title');
+        var ttDesc = document.getElementById('tt-desc');
+        var ttDots = document.getElementById('tt-dots');
+        var ttNext = document.getElementById('tt-next');
+        var ttPrev = document.getElementById('tt-prev');
+        var ttSkip = document.getElementById('tt-skip');
+        var ttClose = document.getElementById('tt-close');
+        var ttArrow = document.getElementById('tt-arrow');
+
+        /* ── Helpers ───────────────────────────────────────────── */
+
+        function buildDots() {
+            ttDots.innerHTML = '';
+            steps.forEach(function (_, i) {
+                var d = document.createElement('div');
+                d.className = 'tt-dot' + (i === current ? ' active' : '');
+                ttDots.appendChild(d);
+            });
+        }
+
+        function updateProgressBar() {
+            var pct = Math.round(((current + 1) / steps.length) * 100);
+            progBar.style.width = pct + '%';
+        }
+
+        function clearHighlight() {
+            if (activeEl) {
+                activeEl.classList.remove('tour-highlight');
+                activeEl = null;
+            }
+        }
+
+        function positionTooltip(el, pos) {
+            var vw = window.innerWidth;
+            var vh = window.innerHeight;
+            var r = el.getBoundingClientRect();
+            var tw = 300;
+            var th = tooltip.offsetHeight || 200;
+            var gap = 16;
+            var top, left, arrowLeft;
+
+            if (pos === 'bottom') {
+                top = r.bottom + gap;
+                left = r.left + r.width / 2 - tw / 2;
+                // flip to top if not enough space below
+                if (top + th > vh - 12) {
+                    top = r.top - th - gap;
+                    pos = 'top';
+                }
+            }
+
+            if (pos === 'top') {
+                top = r.top - th - gap;
+                left = r.left + r.width / 2 - tw / 2;
+                // flip back to bottom if not enough space above
+                if (top < 12) {
+                    top = r.bottom + gap;
+                    pos = 'bottom';
+                }
+            }
+
+            // Clamp horizontally
+            left = Math.max(12, Math.min(left, vw - tw - 12));
+            arrowLeft = (r.left + r.width / 2) - left - 6;
+            arrowLeft = Math.max(20, Math.min(arrowLeft, tw - 32));
+
+            tooltip.style.top = top + 'px';
+            tooltip.style.left = left + 'px';
+
+            // Arrow direction
+            ttArrow.className = 'tt-arrow-wrap ' + (pos === 'bottom' ? 'arrow-top' : 'arrow-bottom');
+            var inner = ttArrow.querySelector('.tt-arrow-inner');
+            inner.style.left = arrowLeft + 'px';
+        }
+
+        function showStep(idx) {
+            clearHighlight();
+
+            var s = steps[idx];
+            var el = document.getElementById(s.id);
+            if (!el) { endTour(); return; }
+
+            el.classList.add('tour-highlight');
+            activeEl = el;
+
+            // Update text
+            ttStepTxt.textContent = 'Step ' + (idx + 1) + ' of ' + steps.length;
+            ttIcon.textContent = s.icon;
+            ttTitle.textContent = s.title;
+            ttDesc.textContent = s.desc;
+
+            // Buttons
+            ttNext.innerHTML = idx === steps.length - 1
+                ? 'Finish ✓'
+                : 'Next <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+
+            if (idx > 0) {
+                ttPrev.classList.add('visible');
+            } else {
+                ttPrev.classList.remove('visible');
+            }
+
+            ttSkip.style.display = idx === steps.length - 1 ? 'none' : '';
+
+            buildDots();
+            updateProgressBar();
+
+            // Scroll element into view then position tooltip
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(function () { positionTooltip(el, s.pos); }, 160);
+        }
+
+        function startTour() {
+            // Filter steps — remove optional ones if element missing or hidden
+            steps = STEPS.filter(function (s) {
+                var el = document.getElementById(s.id);
+                if (!el) return false;
+                if (s.optional && el.offsetParent === null) return false;
+                return true;
+            });
+
+            if (steps.length === 0) return;
+
+            current = 0;
+            running = true;
+            startBtn.style.display = 'none';
+            backdrop.classList.add('active');
+            progBar.classList.add('active');
+            tooltip.classList.add('active');
+
+            showStep(current);
+        }
+
+        function endTour(completed) {
+            clearHighlight();
+            tooltip.classList.remove('active');
+            backdrop.classList.remove('active');
+            progBar.classList.remove('active');
+            progBar.style.width = '0%';
+            startBtn.style.display = 'flex';
+            running = false;
+
+            if (completed) {
+                // Show toast
+                toast.style.display = 'block';
+                setTimeout(function () { toast.style.display = 'none'; }, 3000);
+            }
+
+            // Store in localStorage so we don't auto-start for 30 days
+            try {
+                localStorage.setItem('docshift_tour_v1', Date.now().toString());
+            } catch (e) { }
+        }
+
+        /* ── Event listeners ───────────────────────────────────── */
+
+        startBtn.addEventListener('click', startTour);
+
+        ttNext.addEventListener('click', function () {
+            if (current < steps.length - 1) {
+                current++;
+                showStep(current);
+            } else {
+                endTour(true);
+            }
+        });
+
+        ttPrev.addEventListener('click', function () {
+            if (current > 0) {
+                current--;
+                showStep(current);
+            }
+        });
+
+        ttSkip.addEventListener('click', function () { endTour(false); });
+        ttClose.addEventListener('click', function () { endTour(false); });
+
+        // Click on backdrop also skips
+        backdrop.addEventListener('click', function () { endTour(false); });
+
+        // Keyboard: Escape to close, arrow keys to navigate
+        document.addEventListener('keydown', function (e) {
+            if (!running) return;
+            if (e.key === 'Escape') { endTour(false); }
+            if (e.key === 'ArrowRight') { ttNext.click(); }
+            if (e.key === 'ArrowLeft') { ttPrev.click(); }
+        });
+
+        // Re-position on resize
+        window.addEventListener('resize', function () {
+            if (!running || !steps[current]) return;
+            var s = steps[current];
+            var el = document.getElementById(s.id);
+            if (el) positionTooltip(el, s.pos);
+        });
+
+        /* ── Auto-start for first-time visitors ────────────────── */
+        (function () {
+            try {
+                var stored = localStorage.getItem('docshift_tour_v1');
+                var oneMonth = 30 * 24 * 60 * 60 * 1000;
+                if (!stored || (Date.now() - parseInt(stored, 10)) > oneMonth) {
+                    // Small delay so page layout settles
+                    setTimeout(startTour, 900);
+                }
+            } catch (e) {
+                // localStorage blocked — silent fail
+            }
+        })();
+
+    })();
+</script>
+
+{% endblock %}

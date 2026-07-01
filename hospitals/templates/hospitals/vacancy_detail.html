@@ -1,0 +1,143 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}Vacancy Detail{% endblock %}
+{% block page_title %}Vacancy Detail{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; display: flex; justify-content: center; }
+    
+    /* Premium Detail Card */
+    .detail-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: 20px;
+        padding: 32px; width: 100%; max-width: 680px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Header Styling */
+    .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; gap: 16px; }
+    .hosp-title { font-size: 24px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; letter-spacing: -0.5px; }
+    .hosp-loc { font-size: 13px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .salary-tag { text-align: right; }
+    .salary-val { font-size: 26px; font-weight: 800; color: #10b981; display: block; }
+    .salary-lbl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+
+    /* Grid for Specs */
+    .specs-grid { 
+        display: grid; grid-template-columns: repeat(2, 1fr); 
+        gap: 12px; margin-bottom: 28px; 
+    }
+    .spec-item { 
+        background: #f8fafc; border: 1px solid #f1f5f9; 
+        padding: 14px; border-radius: 12px; 
+    }
+    .spec-lbl { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block; }
+    .spec-val { font-size: 14px; font-weight: 700; color: #334155; }
+
+    /* Description Area */
+    .desc-section { margin-bottom: 32px; }
+    .desc-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; display: block; }
+    .desc-content { 
+        font-size: 14.5px; color: #475569; line-height: 1.7; 
+        background: #f8fafc; padding: 20px; border-radius: 12px; border-left: 4px solid #534AB7;
+    }
+
+    /* Action Buttons */
+    .action-bar { display: flex; align-items: center; gap: 12px; padding-top: 24px; border-top: 1px solid #f1f5f9; }
+    
+    .btn-apply {
+        background: #534AB7; color: white; padding: 14px 32px; border-radius: 12px;
+        border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s;
+        text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-apply:hover { background: #433a96; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(83, 74, 183, 0.2); }
+    
+    .btn-outline {
+        padding: 13px 24px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+        background: white; color: #64748b; font-size: 14px; font-weight: 700;
+        text-decoration: none; transition: 0.2s;
+    }
+    .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; color: #1e293b; }
+
+    .status-confirmed {
+        background: #E1F5EE; color: #1D9E75; padding: 14px 24px; border-radius: 12px;
+        font-size: 14px; font-weight: 700; display: inline-flex; align-items: center;
+    }
+
+    @media(max-width: 640px) {
+        .detail-card { padding: 24px 20px; border-radius: 0; border: none; }
+        .specs-grid { grid-template-columns: 1fr; }
+        .detail-header { flex-direction: column; }
+        .salary-tag { text-align: left; margin-top: 10px; }
+        .action-bar { flex-direction: column; align-items: stretch; }
+    }
+</style>
+
+<div class="dash-wrap">
+    <div class="detail-card">
+        
+        <div class="detail-header">
+            <div>
+                <h2 class="hosp-title">{{ vacancy.hospital_name }}</h2>
+                <span class="hosp-loc">{{ vacancy.location }}, {{ vacancy.city }}</span>
+            </div>
+            <div class="salary-tag">
+                <span class="salary-lbl">Offered Salary</span>
+                <span class="salary-val">₹{{ vacancy.salary }}</span>
+            </div>
+        </div>
+
+        <div class="specs-grid">
+            <div class="spec-item">
+                <span class="spec-lbl">Staff Category</span>
+                <span class="spec-val">{{ vacancy.get_staff_type_display }}</span>
+            </div>
+            {% if vacancy.designation %}
+            <div class="spec-item">
+                <span class="spec-lbl">Role / Designation</span>
+                <span class="spec-val">{{ vacancy.designation }}</span>
+            </div>
+            {% endif %}
+            <div class="spec-item">
+                <span class="spec-lbl">Department / Ward</span>
+                <span class="spec-val">{{ vacancy.get_ward_type_display|default:"General" }}</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-lbl">Required Experience</span>
+                <span class="spec-val">{{ vacancy.experience_required|default:"Freshers Welcome" }}</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-lbl">Schedule Date</span>
+                <span class="spec-val">{{ vacancy.start_date }}{% if vacancy.end_date %} to {{ vacancy.end_date }}{% endif %}</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-lbl">Duty Hours</span>
+                <span class="spec-val">{{ vacancy.start_time|time:"g:i A" }} – {{ vacancy.end_time|time:"g:i A" }}</span>
+            </div>
+        </div>
+
+        {% if vacancy.job_description %}
+        <div class="desc-section">
+            <span class="desc-title">Job Description & Responsibilities</span>
+            <div class="desc-content">
+                {{ vacancy.job_description|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="action-bar">
+            {% if already_applied %}
+                <div class="status-confirmed">Application Already Submitted</div>
+                <a href="{% url 'my_vacancy_applications' %}" class="btn-outline">Track Application</a>
+            {% else %}
+                <form method="post" style="display: contents;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-apply">Submit Application</button>
+                </form>
+            {% endif %}
+            <a href="{% url 'available_vacancies' %}" class="btn-outline">Return to List</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

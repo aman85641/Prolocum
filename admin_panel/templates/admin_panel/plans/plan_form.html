@@ -1,0 +1,583 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block content %}
+<style>
+  .dash-wrap { padding: 4px 0 40px; font-family: 'Inter', sans-serif; max-width: 700px; margin: 0 auto; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .top-bar-title { font-size: 20px; font-weight: 600; color: #111827; margin: 0; }
+  .reg-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .reg-card-head { padding: 16px 20px; border-bottom: 1px solid #f3f4f6; background: #fafafa; }
+  .reg-card-title { font-size: 14px; font-weight: 600; color: #111827; }
+  .reg-card-body { padding: 28px; }
+
+  .f-label { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 0.3px; }
+  .f-input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 14px; color: #111827; transition: all 0.15s; outline: none; background: #fff; box-sizing: border-box; }
+  .f-input:focus { border-color: #534AB7; box-shadow: 0 0 0 3px rgba(83,74,183,0.1); }
+  .f-input:disabled { background: #f9fafb; color: #9ca3af; cursor: not-allowed; }
+  .f-help { font-size: 11px; color: #9ca3af; margin-top: 5px; }
+
+  .section-divider { margin: 28px 0 18px; border-top: 2px dashed #e5e7eb; padding-top: 18px; }
+  .section-tag { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.6px; background: #f3f4f6; padding: 3px 10px; border-radius: 20px; }
+
+  .feature-block { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 16px; transition: border-color 0.2s; }
+  .feature-block.enabled { border-color: #534AB7; box-shadow: 0 0 0 3px rgba(83,74,183,0.08); }
+  .feature-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fafafa; cursor: pointer; }
+  .feature-header-left { display: flex; align-items: center; gap: 10px; }
+  .feature-icon { width: 32px; height: 32px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .feature-icon.active { background: #ede9fe; }
+  .feature-title { font-size: 13px; font-weight: 700; color: #111827; }
+  .feature-subtitle { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+  .feature-body { padding: 16px; border-top: 1px solid #f3f4f6; display: none; }
+  .feature-body.open { display: block; }
+
+  .switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background: #d1d5db; border-radius: 24px; transition: 0.2s; }
+  .slider:before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+  input:checked + .slider { background: #534AB7; }
+  input:checked + .slider:before { transform: translateX(18px); }
+
+  .mode-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .mode-pill { padding: 7px 16px; border-radius: 20px; border: 1.5px solid #e5e7eb; font-size: 12px; font-weight: 600; color: #6b7280; cursor: pointer; background: #fff; transition: all 0.15s; user-select: none; }
+  .mode-pill:hover { border-color: #534AB7; color: #534AB7; }
+  .mode-pill.active { background: #534AB7; color: #fff; border-color: #534AB7; }
+  .mode-pill.active-red { background: #dc2626; color: #fff; border-color: #dc2626; }
+  .mode-pill.active-green { background: #059669; color: #fff; border-color: #059669; }
+
+  .duration-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .duration-pill { padding: 7px 16px; border-radius: 20px; border: 1px solid #e5e7eb; font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; background: #fff; transition: all 0.15s; user-select: none; }
+  .duration-pill:hover { border-color: #534AB7; color: #534AB7; }
+  .duration-pill.active { background: #534AB7; color: #fff; border-color: #534AB7; }
+
+  .input-wrap { position: relative; }
+  .unlimited-badge { display: none; position: absolute; inset: 0; background: linear-gradient(135deg, #ede9fe, #f3f0ff); border: 1px solid #c4b5fd; border-radius: 8px; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #7c3aed; letter-spacing: 0.3px; pointer-events: none; }
+  .unlimited-badge.show { display: flex; }
+
+  .info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #1d4ed8; margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+  .warn-box  { background: #fefce8; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #92400e; margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+
+  .sub-toggle { display: flex; align-items: center; justify-content: space-between; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
+  .sub-toggle-label { font-size: 12px; font-weight: 600; color: #374151; }
+  .sub-toggle-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+  .btn-save { background: #534AB7; color: #fff; border: none; padding: 11px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn-save:hover { opacity: 0.9; }
+  .btn-cancel { font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; margin-left: 16px; }
+
+  .check-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .check-wrap input { width: 16px; height: 16px; accent-color: #534AB7; }
+
+  .two-col { display: flex; gap: 15px; }
+  .two-col > * { flex: 1; }
+</style>
+
+<div class="dash-wrap">
+  <div class="top-bar">
+    <div class="top-bar-title">{{ action }} Plan</div>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <span class="reg-card-title">Plan Details</span>
+    </div>
+
+    <div class="reg-card-body">
+      <form method="post">
+        {% csrf_token %}
+
+        <input type="hidden" name="duration_months" id="durationInput" value="{{ plan.duration_months|default:'1' }}">
+        <input type="hidden" name="token_mode" id="tokenModeInput" value="{{ plan.token_mode|default:'disabled' }}">
+        <input type="hidden" id="vacancyLimitHidden" name="vacancy_limit_h" value="{{ plan.vacancy_limit|default:'0' }}">
+        <input type="hidden" id="shiftPostLimitHidden" name="shift_post_limit_h" value="{{ plan.shift_post_limit|default:'0' }}">
+        <input type="hidden" id="vacancyPostLimitHidden" name="vacancy_post_limit_h" value="{{ plan.vacancy_post_limit|default:'0' }}">
+
+        <div style="margin-bottom: 20px;">
+          <label class="f-label">Role *</label>
+          <select name="role" class="f-input" id="roleSelect" required>
+            <option value="">-- Select Role --</option>
+            <option value="doctor"   {% if plan.role == 'doctor'   %}selected{% endif %}>Doctor</option>
+            <option value="nurse"    {% if plan.role == 'nurse'    %}selected{% endif %}>Nurse</option>
+            <option value="hospital" {% if plan.role == 'hospital' %}selected{% endif %}>Hospital</option>
+          </select>
+        </div>
+
+        <div class="two-col" style="margin-bottom: 20px;">
+          <div>
+            <label class="f-label">Plan Name *</label>
+            <input type="text" name="name" class="f-input" value="{{ plan.name|default:'' }}" placeholder="e.g. Basic, Pro, Premium" required>
+          </div>
+          <div>
+            <label class="f-label">Price (Rs.) *</label>
+            <input type="number" name="price" class="f-input" value="{{ plan.price|default:'0' }}" min="0" step="0.01" required>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <label class="f-label">Description</label>
+          <textarea name="description" class="f-input" rows="2" placeholder="Brief details about this plan...">{{ plan.description|default:'' }}</textarea>
+        </div>
+
+        <div class="section-divider">
+          <span class="section-tag">Plan Duration / Expiry</span>
+        </div>
+
+        <div class="feature-block {% if plan.is_lifetime %}enabled{% endif %}" id="lifetimeBlock" style="margin-bottom: 20px;">
+          <div class="feature-header" onclick="toggleLifetime()">
+            <div class="feature-header-left">
+              <div class="feature-icon {% if plan.is_lifetime %}active{% endif %}" id="lifetimeIcon">&#9854;</div>
+              <div>
+                <div class="feature-title">Lifetime Plan (Never Expires)</div>
+                <div class="feature-subtitle">Enable if this plan should never expire</div>
+              </div>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+              <input type="checkbox" name="is_lifetime" id="isLifetime" {% if plan.is_lifetime %}checked{% endif %} onchange="handleLifetimeChange()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div id="durationSection" {% if plan.is_lifetime %}style="display:none;"{% endif %}>
+          <label class="f-label">Duration</label>
+          <div class="duration-pills">
+            {% for val, label in duration_choices %}
+              <div class="duration-pill {% if plan.duration_months == val %}active{% elif not plan.pk and val == 1 %}active{% endif %}" data-val="{{ val }}">
+                {{ label }}
+              </div>
+            {% endfor %}
+          </div>
+          <div class="info-box" style="margin-top: 12px;">
+            Upon purchase, <strong>start = today</strong> and <strong>end = today + duration</strong> will be set automatically.
+          </div>
+        </div>
+
+        <!-- ══ DOCTOR / NURSE FIELDS ══ -->
+        <div id="doctorNurseFields">
+          <div class="section-divider">
+            <span class="section-tag">Doctor / Nurse Features</span>
+          </div>
+
+          <div class="feature-block" id="tokenBlock">
+            <div class="feature-header">
+              <div class="feature-header-left">
+                <div class="feature-icon" id="tokenIcon">&#128176;</div>
+                <div>
+                  <div class="feature-title">Tokens (For Shift Applications)</div>
+                  <div class="feature-subtitle" id="tokenSubtitle">
+                    {% if plan.token_mode == 'unlimited' %}Unlimited tokens will be provided
+                    {% elif plan.token_mode == 'fixed' %}{{ plan.tokens }} tokens will be provided
+                    {% else %}This plan does not include tokens{% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="feature-body open">
+              <label class="f-label" style="margin-bottom: 10px;">Select Token Mode</label>
+              <div class="mode-pills">
+                <div class="mode-pill {% if plan.token_mode == 'disabled' or not plan.pk %}active-red{% endif %}" data-mode="disabled" id="modeDisabled">No Tokens</div>
+                <div class="mode-pill {% if plan.token_mode == 'fixed' %}active{% endif %}" data-mode="fixed" id="modeFixed">Fixed Amount</div>
+                <div class="mode-pill {% if plan.token_mode == 'unlimited' %}active-green{% endif %}" data-mode="unlimited" id="modeUnlimited">Unlimited</div>
+              </div>
+              <div id="tokenAmountWrap" {% if plan.token_mode != 'fixed' %}style="display:none;"{% endif %}>
+                <label class="f-label">Token Amount</label>
+                <input type="number" name="tokens" id="tokensInput" class="f-input" value="{{ plan.tokens|default:'0' }}" min="0" placeholder="e.g. 50, 100, 500">
+                <div class="f-help">These tokens will be added to the user's wallet upon plan purchase</div>
+              </div>
+              <div id="tokenDisabledInfo" {% if plan.token_mode != 'disabled' and plan.pk %}style="display:none;"{% endif %}>
+                <div class="warn-box">Tokens are disabled for this plan — users will not receive any tokens.</div>
+              </div>
+              <div id="tokenUnlimitedInfo" {% if plan.token_mode != 'unlimited' %}style="display:none;"{% endif %}>
+                <div class="info-box">Users will receive unlimited tokens — no deduction will occur when applying for shifts.</div>
+              </div>
+            </div>
+          </div>
+
+<!-- Shift View -->
+<div class="feature-block {% if plan.shift_view_enabled %}enabled{% endif %}" id="shiftViewBlock">
+  <div class="feature-header" onclick="toggleShiftView()">
+    <div class="feature-header-left">
+      <div class="feature-icon {% if plan.shift_view_enabled %}active{% endif %}" id="shiftViewIcon">&#128269;</div>
+      <div>
+        <div class="feature-title">Available Shifts Access</div>
+        <div class="feature-subtitle">User available shifts page dekh sakta hai</div>
+      </div>
+    </div>
+    <label class="switch" onclick="event.stopPropagation()">
+      <input type="checkbox" name="shift_view_enabled" id="shiftViewEnabled"
+        {% if plan.shift_view_enabled %}checked{% endif %}
+        onchange="handleFeatureToggle('shiftView')">
+      <span class="slider"></span>
+    </label>
+  </div>
+</div>
+
+<!-- Urgent Shifts — shift_view ke baad -->
+<div class="feature-block {% if plan.urgent_shift_enabled %}enabled{% endif %}" id="urgentShiftBlock">
+  <div class="feature-header" onclick="toggleUrgentShift()">
+    <div class="feature-header-left">
+      <div class="feature-icon {% if plan.urgent_shift_enabled %}active{% endif %}" id="urgentShiftIcon">&#128680;</div>
+      <div>
+        <div class="feature-title">Urgent Shifts on Dashboard</div>
+        <div class="feature-subtitle">Dashboard pe urgent shifts dikhenge (Shift Access bhi hona chahiye)</div>
+      </div>
+    </div>
+    <label class="switch" onclick="event.stopPropagation()">
+      <input type="checkbox" name="urgent_shift_enabled" id="urgentShiftEnabled"
+        {% if plan.urgent_shift_enabled %}checked{% endif %}
+        onchange="handleFeatureToggle('urgentShift')">
+      <span class="slider"></span>
+    </label>
+  </div>
+</div>
+
+<!-- Urgent Shift Post Permission -->
+<div class="feature-block {% if plan.urgent_shift_post_enabled %}enabled{% endif %}" id="urgentShiftPostBlock">
+  <div class="feature-header" onclick="toggleUrgentShiftPost()">
+    <div class="feature-header-left">
+      <div class="feature-icon {% if plan.urgent_shift_post_enabled %}active{% endif %}" id="urgentShiftPostIcon">🚨</div>
+      <div>
+        <div class="feature-title">Urgent Shift Post Permission</div>
+        <div class="feature-subtitle">User urgent shift mark karke post kar sakta hai</div>
+      </div>
+    </div>
+    <label class="switch" onclick="event.stopPropagation()">
+      <input type="checkbox" name="urgent_shift_post_enabled" id="urgentShiftPostEnabled"
+        {% if plan.urgent_shift_post_enabled %}checked{% endif %}
+        onchange="handleFeatureToggle('urgentShiftPost')">
+      <span class="slider"></span>
+    </label>
+  </div>
+</div>
+          <!-- Vacancy Apply -->
+          <div class="feature-block {% if plan.vacancy_apply_enabled %}enabled{% endif %}" id="vacancyApplyBlock">
+            <div class="feature-header" onclick="toggleVacancyApply()">
+              <div class="feature-header-left">
+                <div class="feature-icon {% if plan.vacancy_apply_enabled %}active{% endif %}" id="vacancyApplyIcon">&#128203;</div>
+                <div>
+                  <div class="feature-title">Vacancy Apply</div>
+                  <div class="feature-subtitle">Doctor/Nurse can apply for vacancies</div>
+                </div>
+              </div>
+              <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" name="vacancy_apply_enabled" id="vacancyApplyEnabled"
+                  {% if plan.vacancy_apply_enabled %}checked{% endif %}
+                  onchange="handleFeatureToggle('vacancyApply')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="feature-body {% if plan.vacancy_apply_enabled %}open{% endif %}" id="vacancyApplyBody">
+              <div class="sub-toggle">
+                <div>
+                  <div class="sub-toggle-label">Unlimited Vacancy Apply</div>
+                  <div class="sub-toggle-sub">Enable if users should be allowed to apply without a limit</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" name="unlimited_vacancy_apply" id="unlimitedVacancyApply"
+                    {% if plan.unlimited_vacancy_apply %}checked{% endif %}
+                    onchange="handleUnlimited('unlimitedVacancyApply', 'vacancyLimitInput')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="input-wrap">
+                <input type="number" name="vacancy_limit" id="vacancyLimitInput" class="f-input"
+                  value="{{ plan.vacancy_limit|default:'0' }}" min="0"
+                  {% if plan.unlimited_vacancy_apply %}readonly style="opacity:0;"{% endif %}>
+                <div class="unlimited-badge {% if plan.unlimited_vacancy_apply %}show{% endif %}">Unlimited Apply</div>
+              </div>
+              <div class="f-help">Maximum vacancy applications allowed in this plan</div>
+            </div>
+          </div>
+
+          <!-- Shift Post — Doctor/Nurse — name="shift_post_enabled" (DN wala) -->
+          <div class="feature-block {% if plan.shift_post_enabled %}enabled{% endif %}" id="shiftPostDNBlock">
+            <div class="feature-header" onclick="toggleShiftPostDN()">
+              <div class="feature-header-left">
+                <div class="feature-icon {% if plan.shift_post_enabled %}active{% endif %}" id="shiftPostDNIcon">&#128197;</div>
+                <div>
+                  <div class="feature-title">Shift Posting</div>
+                  <div class="feature-subtitle">Doctor/Nurse shifts post kar sakta hai</div>
+                </div>
+              </div>
+              <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" name="shift_post_enabled" id="shiftPostEnabledDN"
+                  {% if plan.shift_post_enabled %}checked{% endif %}
+                  onchange="handleFeatureToggle('shiftPostDN')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="feature-body {% if plan.shift_post_enabled %}open{% endif %}" id="shiftPostDNBody">
+              <div class="sub-toggle">
+                <div>
+                  <div class="sub-toggle-label">Unlimited Shift Posting</div>
+                  <div class="sub-toggle-sub">Unlimited shifts post kar sake</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" name="unlimited_shift_post" id="unlimitedShiftPostDN"
+                    {% if plan.unlimited_shift_post %}checked{% endif %}
+                    onchange="handleUnlimited('unlimitedShiftPostDN', 'shiftPostLimitDN')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="input-wrap">
+                <input type="number" name="shift_post_limit" id="shiftPostLimitDN" class="f-input"
+                  value="{{ plan.shift_post_limit|default:'0' }}" min="0"
+                  {% if plan.unlimited_shift_post %}readonly style="opacity:0;"{% endif %}>
+                <div class="unlimited-badge {% if plan.unlimited_shift_post %}show{% endif %}">Unlimited Shifts</div>
+              </div>
+              <div class="f-help">Total shifts doctor/nurse post kar sakta hai is plan mein</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══ HOSPITAL FIELDS — ALAG NAMES ══ -->
+        <div id="hospitalFields" style="display:none;">
+          <div class="section-divider">
+            <span class="section-tag">Hospital Features</span>
+          </div>
+
+          <!-- Shift Post — Hospital — name="shift_post_enabled_hosp" -->
+          <div class="feature-block {% if plan.shift_post_enabled %}enabled{% endif %}" id="shiftPostBlock">
+            <div class="feature-header" onclick="toggleShiftPost()">
+              <div class="feature-header-left">
+                <div class="feature-icon {% if plan.shift_post_enabled %}active{% endif %}" id="shiftPostIcon">&#128197;</div>
+                <div>
+                  <div class="feature-title">Shift Posting</div>
+                  <div class="feature-subtitle">Hospital can post shifts</div>
+                </div>
+              </div>
+              <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" name="shift_post_enabled_hosp" id="shiftPostEnabled"
+                  {% if plan.shift_post_enabled %}checked{% endif %}
+                  onchange="handleFeatureToggle('shiftPost')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="feature-body {% if plan.shift_post_enabled %}open{% endif %}" id="shiftPostBody">
+              <div class="sub-toggle">
+                <div>
+                  <div class="sub-toggle-label">Unlimited Shift Posting</div>
+                  <div class="sub-toggle-sub">Enable if the hospital should be allowed to post unlimited shifts</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" name="unlimited_shift_post_hosp" id="unlimitedShiftPost"
+                    {% if plan.unlimited_shift_post %}checked{% endif %}
+                    onchange="handleUnlimited('unlimitedShiftPost', 'shiftPostInput')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="input-wrap">
+                <input type="number" name="shift_post_limit_hosp" id="shiftPostInput" class="f-input"
+                  value="{{ plan.shift_post_limit|default:'0' }}" min="0"
+                  {% if plan.unlimited_shift_post %}readonly style="opacity:0;"{% endif %}>
+                <div class="unlimited-badge {% if plan.unlimited_shift_post %}show{% endif %}">Unlimited Shifts</div>
+              </div>
+              <div class="f-help">Total shifts a hospital can post in this plan</div>
+            </div>
+          </div>
+
+          <!-- Vacancy Post — Hospital -->
+          <div class="feature-block {% if plan.vacancy_post_enabled %}enabled{% endif %}" id="vacancyPostBlock">
+            <div class="feature-header" onclick="toggleVacancyPost()">
+              <div class="feature-header-left">
+                <div class="feature-icon {% if plan.vacancy_post_enabled %}active{% endif %}" id="vacancyPostIcon">&#128204;</div>
+                <div>
+                  <div class="feature-title">Vacancy Posting</div>
+                  <div class="feature-subtitle">Hospital can post permanent vacancies</div>
+                </div>
+              </div>
+              <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" name="vacancy_post_enabled" id="vacancyPostEnabled"
+                  {% if plan.vacancy_post_enabled %}checked{% endif %}
+                  onchange="handleFeatureToggle('vacancyPost')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="feature-body {% if plan.vacancy_post_enabled %}open{% endif %}" id="vacancyPostBody">
+              <div class="sub-toggle">
+                <div>
+                  <div class="sub-toggle-label">Unlimited Vacancy Posting</div>
+                  <div class="sub-toggle-sub">Enable if the hospital should be allowed to post unlimited vacancies</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" name="unlimited_vacancy_post" id="unlimitedVacancyPost"
+                    {% if plan.unlimited_vacancy_post %}checked{% endif %}
+                    onchange="handleUnlimited('unlimitedVacancyPost', 'vacancyPostInput')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="input-wrap">
+                <input type="number" name="vacancy_post_limit" id="vacancyPostInput" class="f-input"
+                  value="{{ plan.vacancy_post_limit|default:'0' }}" min="0"
+                  {% if plan.unlimited_vacancy_post %}readonly style="opacity:0;"{% endif %}>
+                <div class="unlimited-badge {% if plan.unlimited_vacancy_post %}show{% endif %}">Unlimited Vacancies</div>
+              </div>
+              <div class="f-help">Total vacancies a hospital can post in this plan</div>
+            </div>
+          </div>
+
+           <div class="feature-block {% if plan.urgent_shift_post_enabled %}enabled{% endif %}" id="urgentShiftPostHospBlock">
+    <div class="feature-header" onclick="toggleUrgentShiftPostHosp()">
+      <div class="feature-header-left">
+        <div class="feature-icon {% if plan.urgent_shift_post_enabled %}active{% endif %}" id="urgentShiftPostHospIcon">🚨</div>
+        <div>
+          <div class="feature-title">Urgent Shift Post Permission</div>
+          <div class="feature-subtitle">Hospital urgent shift mark karke post kar sakta hai</div>
+        </div>
+      </div>
+      <label class="switch" onclick="event.stopPropagation()">
+<input type="checkbox" name="urgent_shift_post_enabled_hosp" id="urgentShiftPostEnabledHosp"
+          {% if plan.urgent_shift_post_enabled %}checked{% endif %}
+          onchange="handleFeatureToggle('urgentShiftPostHosp')">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+        </div>
+
+        <div style="margin: 28px 0 8px;">
+          <label class="check-wrap">
+            <input type="checkbox" name="is_active" {% if plan.is_active or not plan.pk %}checked{% endif %}>
+            <span style="font-size: 13px; font-weight: 600; color: #374151;">Active Plan (Visible to users)</span>
+          </label>
+        </div>
+
+        <div style="display: flex; align-items: center; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f3f4f6;">
+          <button type="submit" class="btn-save">Save Plan</button>
+          <a href="{% url 'admin_plan_list' %}" class="btn-cancel">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const roleSelect        = document.getElementById('roleSelect');
+const doctorNurseFields = document.getElementById('doctorNurseFields');
+const hospitalFields    = document.getElementById('hospitalFields');
+
+function toggleRoleFields() {
+  const role = roleSelect.value;
+  if (role === 'hospital') {
+    doctorNurseFields.style.display = 'none';
+    hospitalFields.style.display    = 'block';
+  } else if (role === 'doctor' || role === 'nurse') {
+    doctorNurseFields.style.display = 'block';
+    hospitalFields.style.display    = 'none';
+  } else {
+    doctorNurseFields.style.display = 'none';
+    hospitalFields.style.display    = 'none';
+  }
+}
+roleSelect.addEventListener('change', toggleRoleFields);
+toggleRoleFields();
+
+// Duration pills
+const durationInput = document.getElementById('durationInput');
+document.querySelectorAll('.duration-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.duration-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    durationInput.value = pill.dataset.val;
+  });
+});
+
+// Lifetime toggle
+function handleLifetimeChange() {
+  const checked         = document.getElementById('isLifetime').checked;
+  const durationSection = document.getElementById('durationSection');
+  const block           = document.getElementById('lifetimeBlock');
+  const icon            = document.getElementById('lifetimeIcon');
+  durationSection.style.display = checked ? 'none' : 'block';
+  block.classList.toggle('enabled', checked);
+  icon.classList.toggle('active', checked);
+}
+function toggleLifetime() {
+  const cb = document.getElementById('isLifetime');
+  cb.checked = !cb.checked;
+  handleLifetimeChange();
+}
+
+// Generic feature toggle handler
+const featureConfigs = {
+  vacancyApply: { cb: 'vacancyApplyEnabled', body: 'vacancyApplyBody', block: 'vacancyApplyBlock', icon: 'vacancyApplyIcon' },
+  shiftPost:    { cb: 'shiftPostEnabled',    body: 'shiftPostBody',    block: 'shiftPostBlock',    icon: 'shiftPostIcon'    },
+  vacancyPost:  { cb: 'vacancyPostEnabled',  body: 'vacancyPostBody',  block: 'vacancyPostBlock',  icon: 'vacancyPostIcon'  },
+  shiftPostDN:  { cb: 'shiftPostEnabledDN',  body: 'shiftPostDNBody',  block: 'shiftPostDNBlock',  icon: 'shiftPostDNIcon'  },
+  shiftView:    { cb: 'shiftViewEnabled',    body: null,               block: 'shiftViewBlock',    icon: 'shiftViewIcon'    },
+  urgentShift:  { cb: 'urgentShiftEnabled',  body: null,               block: 'urgentShiftBlock',  icon: 'urgentShiftIcon'  },
+  urgentShiftPost: { cb: 'urgentShiftPostEnabled', body: null, block: 'urgentShiftPostBlock', icon: 'urgentShiftPostIcon' },
+  urgentShiftPostHosp: { cb: 'urgentShiftPostEnabledHosp', body: null, block: 'urgentShiftPostHospBlock', icon: 'urgentShiftPostHospIcon' },
+
+};
+
+function handleFeatureToggle(feature) {
+  const c       = featureConfigs[feature];
+  const checked = document.getElementById(c.cb).checked;
+  if (c.body) document.getElementById(c.body).classList.toggle('open', checked);
+  document.getElementById(c.block).classList.toggle('enabled', checked);
+  document.getElementById(c.icon).classList.toggle('active', checked);
+}
+
+// Individual toggle functions (called from onclick in HTML)
+function toggleShiftView()    { const cb = document.getElementById('shiftViewEnabled');    cb.checked = !cb.checked; handleFeatureToggle('shiftView');    }
+function toggleUrgentShift()  { const cb = document.getElementById('urgentShiftEnabled');  cb.checked = !cb.checked; handleFeatureToggle('urgentShift');   }
+function toggleVacancyApply() { const cb = document.getElementById('vacancyApplyEnabled'); cb.checked = !cb.checked; handleFeatureToggle('vacancyApply');  }
+function toggleShiftPostDN()  { const cb = document.getElementById('shiftPostEnabledDN');  cb.checked = !cb.checked; handleFeatureToggle('shiftPostDN');   }
+function toggleShiftPost()    { const cb = document.getElementById('shiftPostEnabled');    cb.checked = !cb.checked; handleFeatureToggle('shiftPost');     }
+function toggleVacancyPost()  { const cb = document.getElementById('vacancyPostEnabled');  cb.checked = !cb.checked; handleFeatureToggle('vacancyPost');   }
+function toggleUrgentShiftPost() { const cb = document.getElementById('urgentShiftPostEnabled'); cb.checked = !cb.checked; handleFeatureToggle('urgentShiftPost'); }
+function toggleUrgentShiftPostHosp() { const cb = document.getElementById('urgentShiftPostEnabledHosp'); cb.checked = !cb.checked; handleFeatureToggle('urgentShiftPostHosp'); }
+// Unlimited toggle
+function handleUnlimited(checkboxId, inputId) {
+  const cb    = document.getElementById(checkboxId);
+  const input = document.getElementById(inputId);
+  const badge = input.nextElementSibling;
+  input.readOnly          = cb.checked;
+  input.style.opacity     = cb.checked ? '0' : '1';
+  badge.classList.toggle('show', cb.checked);
+
+  const hiddenMap = {
+    'unlimitedVacancyApply': 'vacancyLimitHidden',
+    'unlimitedShiftPostDN':  'shiftPostLimitHidden',
+    'unlimitedShiftPost':    'shiftPostLimitHidden',
+    'unlimitedVacancyPost':  'vacancyPostLimitHidden',
+  };
+  const hiddenEl = document.getElementById(hiddenMap[checkboxId]);
+  if (hiddenEl) hiddenEl.value = cb.checked ? '0' : (input.value || '0');
+}
+
+// Token mode pills
+const tokenModeInput     = document.getElementById('tokenModeInput');
+const tokenAmountWrap    = document.getElementById('tokenAmountWrap');
+const tokenDisabledInfo  = document.getElementById('tokenDisabledInfo');
+const tokenUnlimitedInfo = document.getElementById('tokenUnlimitedInfo');
+const tokenSubtitle      = document.getElementById('tokenSubtitle');
+
+const modeClasses = { 'disabled': 'active-red', 'fixed': 'active', 'unlimited': 'active-green' };
+
+document.querySelectorAll('.mode-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const mode = pill.dataset.mode;
+    document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active', 'active-red', 'active-green'));
+    pill.classList.add(modeClasses[mode]);
+    tokenModeInput.value             = mode;
+    tokenAmountWrap.style.display    = mode === 'fixed'     ? 'block' : 'none';
+    tokenDisabledInfo.style.display  = mode === 'disabled'  ? 'block' : 'none';
+    tokenUnlimitedInfo.style.display = mode === 'unlimited' ? 'block' : 'none';
+    const subtitles = {
+      'disabled':  'This plan does not include tokens',
+      'fixed':     document.getElementById('tokensInput').value + ' tokens will be provided',
+      'unlimited': 'Unlimited tokens will be provided',
+    };
+    tokenSubtitle.textContent = subtitles[mode];
+  });
+});
+
+document.getElementById('tokensInput').addEventListener('input', function () {
+  if (tokenModeInput.value === 'fixed') {
+    tokenSubtitle.textContent = this.value + ' tokens will be provided';
+  }
+});
+</script>
+{% endblock %}

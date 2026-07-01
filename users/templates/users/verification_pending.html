@@ -1,0 +1,182 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Status – ProLocum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f5e9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 40px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+        .icon-wrap {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 24px;
+        }
+        .icon-pending { background: #fff8e1; }
+        .icon-rejected { background: #fce4ec; }
+        h2 { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
+        p { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 8px; }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 16px 0;
+        }
+        .badge-pending { background: #fff8e1; color: #f59e0b; }
+        .badge-rejected { background: #fce4ec; color: #e53935; }
+        .info-box {
+            background: #f8faff;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #eee; }
+        .info-row:last-child { border: none; }
+        .info-label { color: #888; }
+        .info-val { color: #333; font-weight: 600; }
+        .btn {
+            display: block; width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 12px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
+        .btn-outline { background: white; color: #4f46e5; border: 2px solid #4f46e5; }
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 24px 0;
+            position: relative;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 16px; left: 40px; right: 40px;
+            height: 2px;
+            background: #e0e0e0;
+        }
+        .step { text-align: center; position: relative; z-index: 1; flex: 1; }
+        .step-dot {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            margin: 0 auto 8px;
+            font-weight: 700;
+        }
+        .step-done { background: #4caf50; color: white; }
+        .step-active { background: #f59e0b; color: white; }
+        .step-inactive { background: #e0e0e0; color: #999; }
+        .step-label { font-size: 11px; color: #888; }
+    </style>
+</head>
+<body>
+<div class="card">
+
+    {% if rejected %}
+        <div class="icon-wrap icon-rejected">❌</div>
+        <h2>Application Rejected</h2>
+        <p>Unfortunately, your application has been rejected after a formal review. <b> For Further Details , Please Contact Our Support Team : <a href="tel:+919987460467">+91 9987460467</a></b></p>
+        <span class="status-badge badge-rejected">● Rejected</span>
+    {% else %}
+        <div class="icon-wrap icon-pending">⏳</div>
+        <h2>Verification Under Review</h2>
+        <p>Your application has been submitted and is currently being processed by our team.</p>
+        <p>Verification is typically completed <strong>within 24 hours</strong>.</p>
+        <span class="status-badge badge-pending">● Pending Verification</span>
+    {% endif %}
+
+{% if new_credentials %}
+<div style="background:#f0fdf4; border:1px solid #86efac; border-radius:12px; padding:20px; margin:20px 0;">
+    <h3 style="color:#166534; margin-bottom:12px;">🔐 Your Login Credentials</h3>
+    <p><strong>Username:</strong>&nbsp;
+        <code style="background:#dcfce7; padding:4px 10px; border-radius:6px;">
+            {{ new_credentials.username }}
+        </code>
+    </p>
+    <br>
+    <p><strong>Password:</strong>&nbsp;
+        <code style="background:#dcfce7; padding:4px 10px; border-radius:6px;">
+            {{ new_credentials.password }}
+        </code>
+    </p>
+    <br>
+    <p style="color:#dc2626; font-size:13px;">
+        ⚠️ Please take a screenshot — these details will not be shown again!
+    </p>
+</div>
+{% endif %}
+
+    <div class="timeline">
+        <div class="step">
+            <div class="step-dot step-done">✓</div>
+            <div class="step-label">Registered</div>
+        </div>
+        <div class="step">
+            <div class="step-dot {% if rejected %}step-inactive{% else %}step-active{% endif %}">2</div>
+            <div class="step-label">Under Review</div>
+        </div>
+        <div class="step">
+            <div class="step-dot step-inactive">3</div>
+            <div class="step-label">Approved</div>
+        </div>
+    </div>
+
+    {% if profile %}
+    <div class="info-box">
+        {% if profile.full_name %}
+        <div class="info-row">
+            <span class="info-label">Name</span>
+            <span class="info-val">{{ profile.full_name }}</span>
+        </div>
+        {% endif %}
+        {% if profile.hospital_name %}
+        <div class="info-row">
+            <span class="info-label">Hospital</span>
+            <span class="info-val">{{ profile.hospital_name }}</span>
+        </div>
+        {% endif %}
+        <div class="info-row">
+            <span class="info-label">Role</span>
+            <span class="info-val">{{ role|title }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-val">{% if rejected %}Rejected{% else %}Pending{% endif %}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <a href="{% url 'login' role|default:'doctor' %}" class="btn btn-outline" style="margin-top:16px;">Back to Login</a>
+
+</div>
+</body>
+</html>

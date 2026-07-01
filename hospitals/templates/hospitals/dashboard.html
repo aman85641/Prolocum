@@ -1,0 +1,716 @@
+{% extends 'hospitals/base.html' %}
+{% block title %}Dashboard {% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+/* ── Base ─────────────────────────────────────────────────── */
+.dash-wrap {
+    padding: 0 0 32px;
+    font-family: 'Inter', sans-serif;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* ── Hero Card ───────────────────────────────────────────── */
+.hero-card {
+    background: #2971F0;;
+    border-radius: 20px;
+    padding: 22px 20px 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+}
+.hero-greet { font-size: 11px; font-weight: 700; color: rgba(176,190,197,0.7); text-transform: uppercase; letter-spacing: 1px; }
+.hero-name  { font-size: 22px; font-weight: 800; color: #fff; margin-top: 3px; }
+.hero-verified {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 20px; padding: 4px 10px; margin-top: 10px;
+}
+.hero-verified-dot { width: 6px; height: 6px; border-radius: 50%; }
+.hero-verified span { font-size: 10px; font-weight: 700;color: white !important; }
+.hero-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #0fbf8f; color: #fff; border: none;
+    border-radius: 10px; padding: 10px 18px;
+    font-size: 12px; font-weight: 800; margin-top: 14px;
+    cursor: pointer; text-decoration: none; transition: 0.15s;
+}
+.hero-btn:hover { background: #0aa87d; color: #fff; }
+.hero-avatar {
+    position: absolute; top: 18px; right: 18px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #E1F5EE; border: 2.5px solid #0fbf8f;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; color: #0F6E56;
+    overflow: hidden;
+}
+.hero-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+/* ── Urgent Shifts ───────────────────────────────────────── */
+.urgent-section { margin-bottom: 20px; }
+.urgent-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+}
+.urgent-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 800; color: #9ca3af;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.urgent-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #ef4444;
+    animation: pulse-red 1.4s ease-in-out infinite;
+}
+@keyframes pulse-red {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(1.4); }
+}
+.urgent-see-all { font-size: 10px; font-weight: 700; color: #0fbf8f; text-decoration: none; }
+.urgent-see-all:hover { text-decoration: underline; }
+.urgent-card {
+    background: #fff; border: 1px solid #fecaca; border-left: 4px solid #ef4444;
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; text-decoration: none; color: inherit; transition: 0.15s;
+}
+.urgent-card:hover { border-color: #fca5a5; border-left-color: #dc2626; background: #fff7f7; transform: translateY(-1px); }
+.urgent-card-left { flex: 1; min-width: 0; }
+.urgent-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 6px; padding: 2px 7px;
+    font-size: 9px; font-weight: 800; color: #dc2626;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.urgent-ward { font-size: 14px; font-weight: 800; color: #111827; margin-bottom: 4px; }
+.urgent-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.urgent-meta-item {
+    display: flex; align-items: center; gap: 3px;
+    font-size: 11px; color: #6b7280; font-weight: 500;
+}
+.urgent-card-right { text-align: right; flex-shrink: 0; }
+.urgent-pay       { font-size: 15px; font-weight: 800; color: #0fbf8f; white-space: nowrap; }
+.urgent-pay-label { font-size: 9px; color: #9ca3af; font-weight: 600; text-transform: uppercase; }
+.urgent-apps      {
+    display: inline-block; background: #eff6ff; color: #1d4ed8;
+    border-radius: 6px; padding: 3px 8px; font-size: 10px; font-weight: 700; margin-top: 6px;
+}
+
+/* ── Stats ───────────────────────────────────────────────── */
+.stats-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 20px;
+}
+.sc {
+    background: #fff; border-radius: 14px; padding: 14px 16px;
+    border: 1px solid #e5e7eb; position: relative; overflow: hidden;
+}
+.sc-bar   { position: absolute; top: 0; left: 0; width: 3px; height: 100%; border-radius: 3px 0 0 3px; }
+.sc-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; }
+.sc-val   { font-size: 26px; font-weight: 800; line-height: 1.2; margin-top: 4px; }
+
+.section-label {
+    font-size: 10px; font-weight: 800; color: #9ca3af;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+}
+
+/* ── Quick Actions ───────────────────────────────────────── */
+.qa-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+.qa {
+    background: #fff; border-radius: 16px; padding: 18px 16px;
+    border: 1px solid #e5e7eb; display: flex; flex-direction: column;
+    gap: 12px; text-decoration: none; color: inherit; transition: 0.15s;
+}
+.qa:hover { border-color: #d1d5db; background: #fafafa; transform: translateY(-1px); }
+.qa-icon  { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; }
+.qa-name  { font-size: 13px; font-weight: 700; color: #111827; line-height: 1.3; }
+.ic-teal   { background: #E1F5EE; }
+.ic-blue   { background: #E6F1FB; }
+.ic-purple { background: #EEEDFE; }
+.ic-orange { background: #FAEEDA; }
+
+/* ── Recent Postings ─────────────────────────────────────── */
+.recent-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 28px; margin-bottom: 12px; padding: 0 4px;
+}
+.recent-header .section-label { margin: 0; }
+.recent-see-all { font-size: 11px; font-weight: 700; color: #0fbf8f; text-decoration: none; }
+.recent-see-all:hover { text-decoration: underline; }
+.shift-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+.shift-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.shift-ward { font-size: 14px; font-weight: 700; color: #111827; }
+.shift-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.shift-pay  { font-size: 16px; font-weight: 800; color: #0fbf8f; }
+.shift-card-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid #f3f4f6;
+}
+.shift-applicants  { font-size: 11px; font-weight: 700; color: #534AB7; }
+.shift-manage-btn  {
+    font-size: 12px; font-weight: 700; color: #fff;
+    background: #534AB7; padding: 6px 14px; border-radius: 8px; text-decoration: none; transition: 0.15s;
+}
+.shift-manage-btn:hover { background: #4338ca; color: #fff; }
+.empty-state {
+    text-align: center; padding: 40px 20px; background: #fff;
+    border-radius: 16px; border: 1px dashed #d1d5db; color: #9ca3af; font-size: 12px;
+}
+
+@media(min-width: 600px) {
+    .dash-wrap { max-width: 100%; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    .qa-grid    { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GUIDED TOUR STYLES
+   ══════════════════════════════════════════════════════════ */
+#tour-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,15,35,0.6); z-index: 900; pointer-events: none;
+    backdrop-filter: blur(1px); -webkit-backdrop-filter: blur(1px);
+    transition: opacity 0.3s ease;
+}
+#tour-backdrop.active { display: block; }
+.tour-highlight {
+    position: relative !important; z-index: 950 !important; border-radius: 16px;
+    box-shadow: 0 0 0 3px #0fbf8f, 0 0 0 8px rgba(15,191,143,0.2), 0 0 32px rgba(15,191,143,0.15) !important;
+    transition: box-shadow 0.3s ease !important;
+}
+#tour-tooltip {
+    display: none; position: fixed; z-index: 1100; width: 300px;
+    background: #ffffff; border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.18);
+    padding: 0; font-family: 'Inter', sans-serif; overflow: hidden;
+    transition: top 0.25s ease, left 0.25s ease; pointer-events: all;
+}
+#tour-tooltip.active { display: block; }
+.tt-accent-bar { height: 3px; background: linear-gradient(90deg,#0fbf8f,#3b82f6); border-radius: 18px 18px 0 0; }
+.tt-body   { padding: 16px 18px 14px; }
+.tt-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.tt-step-badge { display: inline-flex; align-items: center; gap: 5px; background: #E1F5EE; border-radius: 20px; padding: 3px 10px; }
+.tt-step-badge-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: #0fbf8f;
+    animation: pulse-green 1.5s ease-in-out infinite;
+}
+@keyframes pulse-green { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.4)} }
+.tt-step-text { font-size: 10px; font-weight: 800; color: #0fbf8f; text-transform: uppercase; letter-spacing: 0.8px; }
+.tt-close {
+    width: 24px; height: 24px; border-radius: 50%; background: #f3f4f6; border: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: #9ca3af; font-size: 14px; transition: 0.15s;
+}
+.tt-close:hover { background: #e5e7eb; color: #6b7280; }
+.tt-icon  { width: 40px; height: 40px; border-radius: 12px; background: #E1F5EE; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+.tt-title { font-size: 15px; font-weight: 800; color: #111827; margin-bottom: 5px; }
+.tt-desc  { font-size: 12px; color: #6b7280; line-height: 1.65; }
+.tt-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+.tt-dots { display: flex; gap: 5px; align-items: center; }
+.tt-dot  { height: 5px; border-radius: 99px; background: #e5e7eb; transition: all 0.25s ease; width: 5px; }
+.tt-dot.active { background: #0fbf8f; width: 18px; }
+.tt-actions { display: flex; gap: 7px; align-items: center; }
+.tt-btn { border: none; border-radius: 10px; padding: 8px 16px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.15s; font-family: 'Inter',sans-serif; }
+.tt-btn-skip { background: #f3f4f6; color: #9ca3af; }
+.tt-btn-skip:hover { background: #e5e7eb; color: #6b7280; }
+.tt-btn-prev { background: #f3f4f6; color: #374151; display: none; }
+.tt-btn-prev:hover { background: #e5e7eb; }
+.tt-btn-prev.visible { display: inline-flex; }
+.tt-btn-next { background: linear-gradient(135deg,#0fbf8f,#0aa87d); color: #fff; display: inline-flex; align-items: center; gap: 5px; }
+.tt-btn-next:hover { background: linear-gradient(135deg,#0aa87d,#098f6b); transform: translateY(-1px); }
+.tt-arrow-wrap  { position: absolute; width: 14px; height: 14px; overflow: visible; pointer-events: none; }
+.tt-arrow-inner { width: 12px; height: 12px; background: #fff; transform: rotate(45deg); position: absolute; }
+.tt-arrow-wrap.arrow-top    { top: -6px; left: 50%; transform: translateX(-50%); }
+.tt-arrow-wrap.arrow-top .tt-arrow-inner    { bottom: -6px; left: 1px; box-shadow: -2px -2px 4px rgba(0,0,0,0.04); }
+.tt-arrow-wrap.arrow-bottom { bottom: -6px; left: 50%; transform: translateX(-50%); }
+.tt-arrow-wrap.arrow-bottom .tt-arrow-inner { top: -6px; left: 1px; box-shadow: 2px 2px 4px rgba(0,0,0,0.05); }
+
+#tour-start-btn {
+    position: fixed; bottom: 24px; right: 16px; background: #1a2342; color: #fff;
+    border: none; border-radius: 50px; padding: 11px 18px 11px 14px;
+    font-size: 12px; font-weight: 800; cursor: pointer; z-index: 800;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 20px rgba(26,35,66,0.4); font-family: 'Inter',sans-serif; transition: 0.2s;
+}
+#tour-start-btn:hover { background: #252f50; box-shadow: 0 6px 24px rgba(26,35,66,0.5); transform: translateY(-1px); }
+#tour-start-btn .tour-btn-icon {
+    width: 26px; height: 26px; border-radius: 50%; background: rgba(15,191,143,0.2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+#tour-start-btn .tour-btn-arr { animation: arr-bounce 1.6s ease-in-out infinite; }
+@keyframes arr-bounce { 0%,100%{transform:translateX(0)} 50%{transform:translateX(3px)} }
+
+#tour-progress-bar {
+    display: none; position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg,#0fbf8f,#3b82f6); z-index: 1050;
+    border-radius: 0 99px 99px 0; transition: width 0.4s ease;
+}
+#tour-progress-bar.active { display: block; }
+
+#tour-toast {
+    display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #1a2342; color: #fff; border-radius: 14px; padding: 12px 20px;
+    font-size: 12px; font-weight: 700; z-index: 1200; white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(26,35,66,0.4); animation: toast-in 0.4s ease; font-family: 'Inter',sans-serif;
+}
+@keyframes toast-in { from{opacity:0;transform:translateX(-50%) translateY(12px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DASHBOARD HTML
+     ═══════════════════════════════════════════════════════════ -->
+<div class="dash-wrap">
+
+    <!-- Hero Card -->
+    <div class="hero-card" id="tour-hero">
+        <div class="hero-greet">Hospital Dashboard</div>
+        <div class="hero-name">{{ profile.hospital_name|default:request.user.username }}</div>
+        <div class="hero-verified" style="background:{% if profile.is_verified %}rgba(15,191,143,0.15){% else %}rgba(245,158,11,0.1){% endif %};border:1px solid {% if profile.is_verified %}rgba(15,191,143,0.3){% else %}rgba(245,158,11,0.2){% endif %};">
+            <div class="hero-verified-dot" style="background:{% if profile.is_verified %}#0fbf8f{% else %}#f59e0b{% endif %};"></div>
+            <span style="color:{% if profile.is_verified %}#0fbf8f{% else %}#f59e0b{% endif %};">
+                {% if profile.is_verified %}Verified Partner{% else %}Verification Pending{% endif %}
+            </span>
+        </div><br>
+       {% if can_post_shift %}
+<a href="{% url 'post_new_shift' %}" class="hero-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Post New Shift
+</a>
+{% else %}
+<a href="{% url 'my_plans' %}" class="hero-btn" ;">
+    Unlock Shifts
+</a>
+{% endif %}
+        <div class="hero-avatar">
+            {% if profile.logo %}
+                <img src="{{ profile.logo.url }}">
+            {% else %}
+                {{ profile.hospital_name|first|upper|default:"H" }}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Urgent Shifts -->
+    {% if urgent_count > 0 %}
+    <div class="urgent-section" id="tour-urgent">
+        <div class="urgent-header">
+            <div class="urgent-label">
+                <div class="urgent-dot"></div>
+                Urgent Shifts
+                <span style="background:#fef2f2;color:#dc2626;border-radius:20px;padding:1px 7px;font-size:9px;font-weight:800;">{{ urgent_count }}</span>
+            </div>
+            <a href="{% url 'posted_shifts' %}" class="urgent-see-all">See all →</a>
+        </div>
+        {% for shift in recent_shifts %}
+            {% if shift.is_urgent %}
+            <a href="{% url 'shift_applicants' shift.id %}" class="urgent-card">
+                <div class="urgent-card-left">
+                    <div class="urgent-badge">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="#dc2626"><circle cx="12" cy="12" r="10"/></svg>
+                        Urgent
+                    </div>
+                    <div class="urgent-ward">{{ shift.get_ward_type_display }}</div>
+                    <div class="urgent-meta">
+                        <div class="urgent-meta-item">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            {{ shift.start_time|time:"g:i A" }} – {{ shift.end_time|time:"g:i A" }}
+                        </div>
+                        <div class="urgent-meta-item">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            {{ shift.start_date|date:"d M" }}
+                        </div>
+                    </div>
+                    <div class="urgent-apps">{{ shift.applications.count }} Applicants</div>
+                </div>
+                <div class="urgent-card-right">
+                    <div class="urgent-pay">₹{{ shift.pay }}</div>
+                    <div class="urgent-pay-label">per shift</div>
+                </div>
+            </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="stats-grid" id="tour-stats">
+        <div class="sc">
+            <div class="sc-bar" style="background:#534AB7"></div>
+            <div class="sc-label">Posted</div>
+            <div class="sc-val" style="color:#534AB7">{{ posted_count|default:"0" }}</div>
+        </div>
+        <div class="sc">
+            <div class="sc-bar" style="background:#3b82f6"></div>
+            <div class="sc-label">Applicants</div>
+            <div class="sc-val" style="color:#1a56db">{{ total_applicants|default:"0" }}</div>
+        </div>
+        <div class="sc">
+            <div class="sc-bar" style="background:#0fbf8f"></div>
+            <div class="sc-label">Accepted</div>
+            <div class="sc-val" style="color:#0fbf8f">{{ accepted_count|default:"0" }}</div>
+        </div>
+        <div class="sc">
+            <div class="sc-bar" style="background:#f59e0b"></div>
+            <div class="sc-label">Active</div>
+            <div class="sc-val" style="color:#d97706">{{ active_count|default:"0" }}</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+<!-- Quick Actions -->
+<div class="section-label">Quick Management</div>
+<div class="qa-grid" id="tour-actions">
+
+    {% if can_post_shift %}
+    <a href="{% url 'post_new_shift' %}" class="qa">
+        <div class="qa-icon ic-purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </div>
+        <div class="qa-name">Post New Shift</div>
+    </a>
+    <a href="{% url 'posted_shifts' %}" class="qa">
+        <div class="qa-icon ic-blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </div>
+        <div class="qa-name">Posted Shifts</div>
+    </a>
+    {% else %}
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-purple" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Post New Shift</div>
+    </a>
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-blue" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Posted Shifts</div>
+    </a>
+    {% endif %}
+
+    {% if can_post_vacancy %}
+    <a href="{% url 'hospital_post_vacancy' %}" class="qa">
+        <div class="qa-icon ic-teal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div class="qa-name">Post Vacancy</div>
+    </a>
+    <a href="{% url 'hospital_posted_vacancies' %}" class="qa">
+        <div class="qa-icon ic-orange">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="qa-name">Posted Vacancies</div>
+    </a>
+    {% else %}
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-teal" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Post Vacancy</div>
+    </a>
+    <a href="{% url 'my_plans' %}" class="qa" style="opacity:0.5;border-style:dashed;">
+        <div class="qa-icon ic-orange" style="font-size:16px;">🔒</div>
+        <div class="qa-name" style="color:#9ca3af;">Posted Vacancies</div>
+    </a>
+    {% endif %}
+
+</div>
+
+    <!-- Recent Postings -->
+    <div class="recent-header" id="tour-recent">
+        <span class="section-label">Recent Postings</span>
+        <a href="{% url 'posted_shifts' %}" class="recent-see-all">View all →</a>
+    </div>
+
+    {% if recent_shifts %}
+        {% for shift in recent_shifts %}
+        <div class="shift-card">
+            <div class="shift-card-top">
+                <div>
+                    <div class="shift-ward">{{ shift.get_ward_type_display }}</div>
+                    <div class="shift-meta">{{ shift.start_date }} &bull; {{ shift.bed_count }} Beds</div>
+                </div>
+                <div class="shift-pay">₹{{ shift.pay }}</div>
+            </div>
+            <div class="shift-card-bottom">
+                <div class="shift-applicants">{{ shift.applications.count }} APPLICANTS</div>
+                <a href="{% url 'shift_applicants' shift.id %}" class="shift-manage-btn">Manage</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">No recent postings found.</div>
+    {% endif %}
+
+    <!-- Copyright -->
+    <div style="text-align:center; margin-top:28px; padding-top:16px; border-top:1px solid #f3f4f6;">
+        <div style="font-size:11px; color:#9ca3af; font-weight:600; letter-spacing:0.3px;">
+            © {% now "Y" %} <span style="color:#0fbf8f; font-weight:800;">ProLocum</span> &nbsp;·&nbsp; All rights reserved
+        </div>
+        <div style="font-size:10px; color:#d1d5db; margin-top:3px; font-weight:500;">
+            Connecting Healthcare Professionals
+        </div>
+    </div>
+
+</div><!-- /.dash-wrap -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     GUIDED TOUR  —  DOM Elements
+     ═══════════════════════════════════════════════════════════ -->
+<div id="tour-progress-bar"></div>
+<div id="tour-backdrop"></div>
+
+<div id="tour-tooltip" role="dialog" aria-modal="true" aria-label="Guided Tour">
+    <div class="tt-accent-bar"></div>
+    <div class="tt-body">
+        <div class="tt-header">
+            <div class="tt-step-badge">
+                <div class="tt-step-badge-dot"></div>
+                <span class="tt-step-text" id="tt-step-text">Step 1 of 5</span>
+            </div>
+            <button class="tt-close" id="tt-close" aria-label="Close tour">✕</button>
+        </div>
+        <div class="tt-icon"  id="tt-icon">🏥</div>
+        <div class="tt-title" id="tt-title">Title</div>
+        <div class="tt-desc"  id="tt-desc">Description</div>
+        <div class="tt-footer">
+            <div class="tt-dots" id="tt-dots"></div>
+            <div class="tt-actions">
+                <button class="tt-btn tt-btn-skip" id="tt-skip">Skip tour</button>
+                <button class="tt-btn tt-btn-prev" id="tt-prev" aria-label="Previous step">← Back</button>
+                <button class="tt-btn tt-btn-next" id="tt-next">
+                    Next
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="tt-arrow-wrap" id="tt-arrow">
+        <div class="tt-arrow-inner"></div>
+    </div>
+</div>
+
+<button id="tour-start-btn" aria-label="Start guided tour">
+    <div class="tour-btn-icon">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0fbf8f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#0fbf8f" stroke="none"/></svg>
+    </div>
+    Tour Guide
+    <svg class="tour-btn-arr" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+</button>
+
+<div id="tour-toast">🎉 Tour complete! You're all set.</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     GUIDED TOUR  —  JavaScript
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+    'use strict';
+
+    var STEPS = [
+        {
+            id    : 'tour-hero',
+            title : 'Your Hospital Dashboard',
+            desc  : 'Your hospital name, verification status, and the Post New Shift button are here. The avatar in the top-right shows your hospital logo.',
+            icon  : '🏥',
+            pos   : 'bottom'
+        },
+        {
+            id       : 'tour-urgent',
+            title    : 'Urgent Shifts — Fill Quickly!',
+            desc     : 'The blinking red dot means these shifts need doctors urgently. Tap any card to manage applicants right away.',
+            icon     : '🚨',
+            pos      : 'bottom',
+            optional : true
+        },
+        {
+            id    : 'tour-stats',
+            title : 'Activity Overview',
+            desc  : 'Track your Posted shifts, total Applicants, Accepted doctors, and Active shifts — all updating in real time.',
+            icon  : '📊',
+            pos   : 'bottom'
+        },
+        {
+            id    : 'tour-actions',
+            title : 'Quick Management',
+            desc  : 'Post a new shift, manage existing postings, browse the shift board, or update your hospital profile — all in one tap.',
+            icon  : '⚡',
+            pos   : 'bottom'
+        },
+        {
+            id       : 'tour-recent',
+            title    : 'Recent Postings',
+            desc     : 'Your latest shift postings appear here. See applicant counts at a glance and tap Manage to review and accept doctors.',
+            icon     : '📋',
+            pos      : 'top',
+            optional : true
+        }
+    ];
+
+    /* ── State ─────────────────────────────────────────────── */
+    var steps    = [];
+    var current  = 0;
+    var activeEl = null;
+    var running  = false;
+
+    /* ── DOM refs ──────────────────────────────────────────── */
+    var backdrop  = document.getElementById('tour-backdrop');
+    var tooltip   = document.getElementById('tour-tooltip');
+    var progBar   = document.getElementById('tour-progress-bar');
+    var startBtn  = document.getElementById('tour-start-btn');
+    var toast     = document.getElementById('tour-toast');
+    var ttStepTxt = document.getElementById('tt-step-text');
+    var ttIcon    = document.getElementById('tt-icon');
+    var ttTitle   = document.getElementById('tt-title');
+    var ttDesc    = document.getElementById('tt-desc');
+    var ttDots    = document.getElementById('tt-dots');
+    var ttNext    = document.getElementById('tt-next');
+    var ttPrev    = document.getElementById('tt-prev');
+    var ttSkip    = document.getElementById('tt-skip');
+    var ttClose   = document.getElementById('tt-close');
+    var ttArrow   = document.getElementById('tt-arrow');
+
+    /* ── Helpers ───────────────────────────────────────────── */
+    function buildDots() {
+        ttDots.innerHTML = '';
+        steps.forEach(function (_, i) {
+            var d = document.createElement('div');
+            d.className = 'tt-dot' + (i === current ? ' active' : '');
+            ttDots.appendChild(d);
+        });
+    }
+
+    function updateProgressBar() {
+        progBar.style.width = Math.round(((current + 1) / steps.length) * 100) + '%';
+    }
+
+    function clearHighlight() {
+        if (activeEl) { activeEl.classList.remove('tour-highlight'); activeEl = null; }
+    }
+
+    function positionTooltip(el, pos) {
+        var vw  = window.innerWidth;
+        var vh  = window.innerHeight;
+        var r   = el.getBoundingClientRect();
+        var tw  = 300;
+        var th  = tooltip.offsetHeight || 200;
+        var gap = 16;
+        var top, left, arrowLeft;
+
+        if (pos === 'bottom') {
+            top  = r.bottom + gap;
+            left = r.left + r.width / 2 - tw / 2;
+            if (top + th > vh - 12) { top = r.top - th - gap; pos = 'top'; }
+        }
+        if (pos === 'top') {
+            top  = r.top - th - gap;
+            left = r.left + r.width / 2 - tw / 2;
+            if (top < 12) { top = r.bottom + gap; pos = 'bottom'; }
+        }
+
+        left      = Math.max(12, Math.min(left, vw - tw - 12));
+        arrowLeft = (r.left + r.width / 2) - left - 6;
+        arrowLeft = Math.max(20, Math.min(arrowLeft, tw - 32));
+
+        tooltip.style.top  = top  + 'px';
+        tooltip.style.left = left + 'px';
+        ttArrow.className  = 'tt-arrow-wrap ' + (pos === 'bottom' ? 'arrow-top' : 'arrow-bottom');
+        ttArrow.querySelector('.tt-arrow-inner').style.left = arrowLeft + 'px';
+    }
+
+    function showStep(idx) {
+        clearHighlight();
+        var s  = steps[idx];
+        var el = document.getElementById(s.id);
+        if (!el) { endTour(); return; }
+
+        el.classList.add('tour-highlight');
+        activeEl = el;
+
+        ttStepTxt.textContent = 'Step ' + (idx + 1) + ' of ' + steps.length;
+        ttIcon.textContent    = s.icon;
+        ttTitle.textContent   = s.title;
+        ttDesc.textContent    = s.desc;
+
+        ttNext.innerHTML = idx === steps.length - 1
+            ? 'Finish ✓'
+            : 'Next <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+
+        idx > 0 ? ttPrev.classList.add('visible') : ttPrev.classList.remove('visible');
+        ttSkip.style.display = idx === steps.length - 1 ? 'none' : '';
+
+        buildDots();
+        updateProgressBar();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function () { positionTooltip(el, s.pos); }, 160);
+    }
+
+    function startTour() {
+        steps = STEPS.filter(function (s) {
+            var el = document.getElementById(s.id);
+            if (!el) return false;
+            if (s.optional && el.offsetParent === null) return false;
+            return true;
+        });
+        if (!steps.length) return;
+
+        current  = 0; running = true;
+        startBtn.style.display = 'none';
+        backdrop.classList.add('active');
+        progBar.classList.add('active');
+        tooltip.classList.add('active');
+        showStep(current);
+    }
+
+    function endTour(completed) {
+        clearHighlight();
+        tooltip.classList.remove('active');
+        backdrop.classList.remove('active');
+        progBar.classList.remove('active');
+        progBar.style.width = '0%';
+        startBtn.style.display = 'flex';
+        running = false;
+
+        if (completed) {
+            toast.style.display = 'block';
+            setTimeout(function () { toast.style.display = 'none'; }, 3000);
+        }
+        try { localStorage.setItem('hosp_tour_v1', Date.now().toString()); } catch (e) {}
+    }
+
+    /* ── Event listeners ───────────────────────────────────── */
+    startBtn.addEventListener('click', startTour);
+    ttNext.addEventListener('click', function () {
+        current < steps.length - 1 ? (current++, showStep(current)) : endTour(true);
+    });
+    ttPrev.addEventListener('click',   function () { if (current > 0) { current--; showStep(current); } });
+    ttSkip.addEventListener('click',   function () { endTour(false); });
+    ttClose.addEventListener('click',  function () { endTour(false); });
+    backdrop.addEventListener('click', function () { endTour(false); });
+
+    document.addEventListener('keydown', function (e) {
+        if (!running) return;
+        if (e.key === 'Escape')     endTour(false);
+        if (e.key === 'ArrowRight') ttNext.click();
+        if (e.key === 'ArrowLeft')  ttPrev.click();
+    });
+    window.addEventListener('resize', function () {
+        if (!running || !steps[current]) return;
+        var el = document.getElementById(steps[current].id);
+        if (el) positionTooltip(el, steps[current].pos);
+    });
+
+    /* ── Auto-start for first-time visitors ────────────────── */
+    (function () {
+        try {
+            var stored = localStorage.getItem('hosp_tour_v1');
+            if (!stored || Date.now() - parseInt(stored, 10) > 30 * 24 * 60 * 60 * 1000) {
+                setTimeout(startTour, 900);
+            }
+        } catch (e) {}
+    })();
+
+})();
+</script>
+
+{% endblock %}

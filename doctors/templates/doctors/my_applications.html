@@ -1,0 +1,380 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}Applied Shift{% endblock %}
+{% block page_title %}Applied Shift{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    /* Modern Tab Navigation */
+    .tab-container {
+        display: flex; gap: 4px; margin-bottom: 24px;
+        background: #f3f4f6; padding: 4px; border-radius: 10px;
+        width: fit-content; border: 1px solid #e5e7eb;
+    }
+    .mtab { 
+        padding: 8px 20px; border: none; background: transparent; 
+        border-radius: 8px; font-size: 13px; font-weight: 600;
+        cursor: pointer; color: #6b7280; transition: 0.2s;
+        white-space: nowrap;
+    }
+    .active-tab { background: #fff; color: #534AB7; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+    /* Application Card Style */
+    .app-card { 
+        background: #fff; border: 1px solid #e5e7eb; 
+        border-radius: 12px; padding: 20px; margin-bottom: 16px; 
+        position: relative; transition: 0.15s; 
+    }
+    .app-card:hover { border-color: #d1d5db; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+
+    .hosp-name { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 4px; display: block; }
+    .shift-meta { font-size: 12px; color: #9ca3af; font-weight: 500; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .dot-sep { width: 3px; height: 3px; background: #d1d5db; border-radius: 50%; }
+
+    .pay-text { font-size: 18px; font-weight: 800; color: #1D9E75; }
+.badge-withdrawn { background: #FCEBEB; color: #E24B4A; border: 1px solid #fecaca; }
+.app-card.withdrawn-card { border-color: #fecaca; background: #fff8f8; }
+    /* Status Badges */
+    .badge {
+        display: inline-flex; align-items: center; padding: 4px 12px;
+        border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .badge-applied { background: #EEEDFE; color: #534AB7; }
+    .badge-accepted { background: #E1F5EE; color: #1D9E75; }
+    .badge-rejected { background: #FCEBEB; color: #E24B4A; }
+    .badge-neutral { background: #f3f4f6; color: #6b7280; }
+
+    /* Progress Tracker */
+    .progress-track { display: flex; align-items: center; margin-top: 24px; padding: 0 10px; }
+    .prog-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+    .prog-step:not(:last-child)::after {
+        content: ''; position: absolute; top: 10px; left: 50%; width: 100%;
+        height: 2px; background: #e5e7eb; z-index: 1;
+    }
+    .prog-step.done:not(:last-child)::after { background: #534AB7; }
+    .prog-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #e5e7eb; background: #fff; z-index: 2; position: relative; }
+    .prog-step.done .prog-dot { background: #534AB7; border-color: #534AB7; }
+    .prog-step.active .prog-dot { border-color: #534AB7; background: #fff; box-shadow: 0 0 0 3px #EEEDFE; }
+    .prog-label { font-size: 10px; font-weight: 700; color: #9ca3af; margin-top: 8px; text-transform: uppercase; }
+    .prog-step.done .prog-label, .prog-step.active .prog-label { color: #111827; }
+
+    .btn-secondary {
+        padding: 6px 14px; border-radius: 6px; border: 1px solid #e5e7eb;
+        background: white; color: #374151; font-size: 12px; font-weight: 600; cursor: pointer;
+        text-decoration: none; display: inline-block; transition: 0.2s;
+    }
+    .btn-secondary:hover { background: #f9fafb; }
+    .btn-withdraw { color: #E24B4A; border-color: #fecaca; background: #FCEBEB; }
+    .btn-primary-sm { background: #534AB7 !important; color: white !important; border: none !important; }
+</style>
+
+<div class="dash-wrap">
+    
+    <div class="tab-container">
+    <button onclick="showTab('applied')"    id="tab-applied"    class="mtab active-tab">Applied ({{ applied_apps|length }})</button>
+    <button onclick="showTab('onboard')"   id="tab-onboard"    class="mtab">Onboard ({{ onboard_apps|length }})</button>
+    <button onclick="showTab('completed')" id="tab-completed"  class="mtab">Completed ({{ completed_apps|length }})</button>
+<button onclick="showTab('withdrawn')" id="tab-withdrawn" class="mtab">
+    Withdrawn ({{ withdrawn_apps|length }})
+</button></div>
+
+    <div id="panel-applied">
+    {% if applied_apps %}
+        {% for app in applied_apps %}
+        <div class="app-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <span class="hosp-name">{{ app.shift.hospital_name }}</span>
+                    <div class="shift-meta">
+                        <span>{{ app.shift.get_ward_type_display }}</span>
+                        <span class="dot-sep"></span>
+                        <span>{{ app.shift.start_date }}</span>
+                        <span class="dot-sep"></span>
+                        <span>{{ app.shift.city }}</span>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="pay-text">₹{{ app.shift.pay }}</div>
+                    <div style="margin-top:8px;">
+                        {% if app.status == 'applied' %}<span class="badge badge-applied">Applied</span>
+{% elif app.status == 'accepted' %}<span class="badge badge-accepted">Accepted</span>
+{% elif app.status == 'rejected' %}<span class="badge badge-rejected">Rejected</span>
+{% elif app.status == 'withdrawn' %}<span class="badge badge-withdrawn">Withdrawn</span>
+{% else %}<span class="badge badge-neutral">{{ app.status }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:8px;">
+                {% if app.status == 'applied' or app.status == 'reserved' %}
+                <form method="post" action="{% url withdraw_url|default:'withdraw_application' app.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-secondary btn-withdraw" onclick="return confirm('Withdraw application?')">Withdraw Application</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align:center; padding:60px 20px; color:#9ca3af; background:#f9fafb; border-radius:12px; border:1px dashed #d1d5db;">
+            <p style="font-size:14px; font-weight:500;">No active applications found.</p>
+        </div>
+    {% endif %}
+    </div>
+
+   <div id="panel-onboard" style="display:none;">
+{% if onboard_apps %}
+    {% for app in onboard_apps %}
+    <div class="app-card">
+        <div style="display:flex; justify-content:space-between;">
+            <div>
+                <span class="hosp-name">{{ app.shift.hospital_name }}</span>
+                <div class="shift-meta">
+                    <span>{{ app.shift.get_ward_type_display }}</span>
+                    <span class="dot-sep"></span>
+                    <span>{{ app.shift.start_date }}</span>
+                </div>
+            </div>
+            <div class="pay-text">₹{{ app.shift.pay }}</div>
+        </div>
+
+        <div class="progress-track">
+            {% with cur=app.onboard_status %}
+            <div class="prog-step {% if cur == 'onboarded' %}active{% elif cur in 'arrived,started,completed' %}done{% endif %}">
+                <div class="prog-dot"></div><div class="prog-label">Onboard</div>
+            </div>
+            <div class="prog-step {% if cur == 'arrived' %}active{% elif cur in 'started,completed' %}done{% endif %}">
+                <div class="prog-dot"></div><div class="prog-label">Arrived</div>
+            </div>
+            <div class="prog-step {% if cur == 'started' %}active{% elif cur == 'completed' %}done{% endif %}">
+                <div class="prog-dot"></div><div class="prog-label">Started</div>
+            </div>
+            <div class="prog-step {% if cur == 'completed' %}done{% endif %}">
+                <div class="prog-dot"></div><div class="prog-label">Done</div>
+            </div>
+            {% endwith %}
+        </div>
+          <div style="margin-top:12px; padding:10px 14px; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; display:flex; align-items:center; gap:8px;">
+            <span style="font-size:13px;">📞</span>
+            <div>
+                <div style="font-size:10px; font-weight:800; color:#16A34A; text-transform:uppercase; margin-bottom:2px;">Hospital Contact</div>
+                <a href="tel:{{ app.shift.posted_by.mobile }}" style="font-size:14px; font-weight:700; color:#111827; text-decoration:none;">
+    {{ app.shift.posted_by.mobile }}
+</a>
+            </div>
+        </div>
+
+        <!-- ← WITHDRAW BUTTON ADD KARO YAHAN -->
+        {% if not app.shift.is_urgent %}
+            {% if app.can_withdraw_status %}
+                <div style="margin-top:16px; display:flex; justify-content:flex-end; border-top:1px solid #f3f4f6; padding-top:12px;">
+                    <form method="post" action="{% url withdraw_url|default:'withdraw_application' app.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-secondary btn-withdraw"
+                            onclick="return confirm('Withdraw karna chahte ho? 30 min window ke baad withdraw nahi hoga.')">
+                            Withdraw Application
+                        </button>
+                    </form>
+                    {% if app.accepted_at %}
+                    <span style="font-size:10px;color:#9ca3af;margin-left:10px;align-self:center;">
+                        ⏱ <span id="timer-{{ app.id }}"></span>
+                    </span>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div style="margin-top:12px; padding:8px 12px; background:#fff7ed; border:1px solid #fed7aa;
+                            border-radius:8px; font-size:11px; color:#92400e; font-weight:600;">
+                    ⚠️ Withdrawal window passed (30 min limit)
+                </div>
+            {% endif %}
+        {% else %}
+            <div style="margin-top:12px; padding:8px 12px; background:#fef2f2; border:1px solid #fecaca;
+                        border-radius:8px; font-size:11px; color:#dc2626; font-weight:600;">
+                🚨 Urgent shift — withdrawal not allowed
+            </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+{% else %}
+    <div style="text-align:center; padding:60px 20px; color:#9ca3af; background:#f9fafb; border-radius:12px; border:1px dashed #d1d5db;">
+        <p style="font-size:14px; font-weight:500;">No ongoing onboardings.</p>
+    </div>
+{% endif %}
+</div>
+
+    <div id="panel-completed" style="display:none;">
+    {% if completed_with_reviews %}
+        {% for item in completed_with_reviews %}
+        <div class="app-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                <div>
+                    <span class="hosp-name">{{ item.app.shift.hospital_name }}</span>
+                    <span class="shift-meta">{{ item.app.shift.start_date }} • {{ item.app.shift.get_ward_type_display }}</span>
+                </div>
+                <div style="text-align:right;">
+                    <div class="pay-text">₹{{ item.app.shift.pay }}</div>
+                    <span class="badge badge-accepted">Completed</span>
+                </div>
+            </div>
+{% if item.app.hospital_marked_paid and item.app.payment_status == 'unpaid' %}
+<div style="background:#fff8e1; border:1px solid #f59e0b; border-radius:12px;
+            padding:16px; margin-bottom:16px;">
+    <div style="font-size:13px; font-weight:800; color:#92400e; margin-bottom:4px;">
+        💰 Confirm Payment
+    </div>
+    <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">
+        Amount: <strong>₹{{ item.app.shift.pay }}</strong>
+    </div>
+    <div style="font-size:12px; color:#6b7280; margin-bottom:14px;">
+        Method: <strong>{% if item.app.payment_method == 'upi' %}UPI{% else %}Cash{% endif %}</strong>
+    </div>
+    <div style="display:flex; gap:8px;">
+        <button onclick="locumRespond({{ item.app.id }}, true)"
+                style="flex:1; padding:11px; border-radius:10px; background:#0fbf8f;
+                       color:#fff; border:none; font-weight:800; font-size:13px; cursor:pointer;">
+            ✅ {% if item.app.payment_method == 'cash' %}Cash Received{% else %}Payment Received{% endif %}
+        </button>
+        <button onclick="locumRespond({{ item.app.id }}, false)"
+                style="flex:1; padding:11px; border-radius:10px; background:#fee2e2;
+                       color:#ef4444; border:1px solid #fca5a5; font-weight:800;
+                       font-size:13px; cursor:pointer;">
+            ❌ Not Received
+        </button>
+    </div>
+    <div id="locum_pay_msg_{{ item.app.id }}"
+         style="display:none; font-size:12px; font-weight:700; margin-top:8px; text-align:center;"></div>
+</div>
+
+{% elif item.app.payment_status == 'paid' %}
+<div style="background:#e6faf5; border-radius:10px; padding:10px 14px; margin-bottom:16px;
+            text-align:center; font-size:13px; font-weight:700; color:#0fbf8f;">
+    ✅ Payment Received — ₹{{ item.app.shift.pay }}
+</div>
+
+{% elif item.app.payment_status == 'disputed' %}
+<div style="background:#fee2e2; border-radius:10px; padding:10px 14px; margin-bottom:16px;
+            text-align:center; font-size:13px; font-weight:700; color:#ef4444;">
+    ⚠️ Dispute Raised — Admin will review
+</div>
+
+{% else %}
+<div style="background:#f3f4f6; border-radius:10px; padding:10px 14px; margin-bottom:16px;
+            text-align:center; font-size:12px; color:#6b7280;">
+    ⏳ Payment pending — Waiting for payer
+</div>
+{% endif %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid #f3f4f6; padding-top: 16px;">
+                <div style="background:#F8FAFC; border-radius:10px; padding:12px; border:1px solid #E2E8F0;">
+                    <span style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">Your Feedback</span>
+                    {% if item.my_review %}
+                        <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                            <span style="color:#f59e0b;">{% for i in "12345" %}{% if forloop.counter <= item.my_review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                            <span style="font-size:12px; font-weight:700;">{{ item.my_review.rating }}/5</span>
+                        </div>
+                        <p style="font-size:11px; color:#64748b; margin-top:4px; line-height:1.4;">{{ item.my_review.comment|truncatechars:60 }}</p>
+                        <a href="/{{ request.user.role }}s/shifts/review/{{ item.app.id }}/" style="font-size:11px; color:#534AB7; font-weight:700; text-decoration:none; margin-top:8px; display:inline-block;">Edit Review</a>
+                    {% else %}
+                        <div style="margin-top:10px;">
+                            <a href="/{{ request.user.role }}s/shifts/review/{{ item.app.id }}/" class="btn-secondary btn-primary-sm" style="font-size:10px; padding:4px 8px;">Rate Hospital</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="background:#F0FDF4; border-radius:10px; padding:12px; border:1px solid #BBF7D0;">
+                    <span style="font-size:10px; font-weight:800; color:#16A34A; text-transform:uppercase;">Hospital's Feedback</span>
+                    {% if item.hospital_review %}
+                        <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                            <span style="color:#16A34A;">{% for i in "12345" %}{% if forloop.counter <= item.hospital_review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                            <span style="font-size:12px; font-weight:700; color:#16A34A;">{{ item.hospital_review.rating }}/5</span>
+                        </div>
+                        <p style="font-size:11px; color:#166534; margin-top:4px; line-height:1.4;">{{ item.hospital_review.comment }}</p>
+                    {% else %}
+                        <p style="font-size:11px; color:#94a3b8; margin-top:10px; font-style:italic;">Pending hospital response...</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align:center; padding:60px 20px; color:#9ca3af; background:#f9fafb; border-radius:12px; border:1px dashed #d1d5db;">
+            <p style="font-size:14px; font-weight:500;">No shifts completed yet.</p>
+        </div>
+    {% endif %}
+    </div>
+
+<div id="panel-withdrawn" style="display:none;">
+{% if withdrawn_apps %}
+    {% for app in withdrawn_apps %}
+    <div class="app-card withdrawn-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <span class="hosp-name">{{ app.shift.hospital_name }}</span>
+                <div class="shift-meta">
+                    <span>{{ app.shift.get_ward_type_display }}</span>
+                    <span class="dot-sep"></span>
+                    <span>{{ app.shift.start_date }}</span>
+                    <span class="dot-sep"></span>
+                    <span>{{ app.shift.city }}</span>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div class="pay-text" style="color:#E24B4A;">₹{{ app.shift.pay }}</div>
+                <div style="margin-top:8px;">
+                    <span class="badge badge-withdrawn">Withdrawn</span>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:10px; font-size:11px; color:#9ca3af; font-weight:600;">
+            Withdrawn on {{ app.applied_at|date:"d M Y" }}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div style="text-align:center; padding:60px 20px; color:#9ca3af; background:#fff8f8; border-radius:12px; border:1px dashed #fecaca;">
+        <p style="font-size:14px; font-weight:500;">No withdrawn applications.</p>
+    </div>
+{% endif %}
+</div>
+</div>
+
+<script>
+    function locumRespond(appId, received) {
+    const msgEl = document.getElementById('locum_pay_msg_' + appId);
+    fetch(`/shifts/payment/locum-response/${appId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ received: received })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            msgEl.style.display = 'block';
+            if (data.payment_status === 'paid') {
+                msgEl.style.color = '#0fbf8f';
+                msgEl.textContent = '✅ Payment confirmed!';
+            } else {
+                msgEl.style.color = '#ef4444';
+                msgEl.textContent = '⚠ Dispute raised. Admin will review.';
+            }
+            setTimeout(() => location.reload(), 1500);
+        }
+    });
+}
+
+function getCookie(name) {
+    const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+}
+function showTab(name) {
+    ['applied','onboard','completed','withdrawn'].forEach(t => {
+        document.getElementById('panel-'+t).style.display = t===name ? 'block' : 'none';
+        document.getElementById('tab-'+t).classList.toggle('active-tab', t===name);
+    });
+}
+</script>
+{% endblock %}

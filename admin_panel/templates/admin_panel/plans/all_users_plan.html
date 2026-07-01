@@ -1,0 +1,70 @@
+{% extends 'admin_panel/base.html' %}
+{% block content %}
+<div class="dash-wrap" style="padding: 4px 0 32px; font-family: 'Inter', sans-serif;">
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h2 style="font-size:22px; font-weight:600; margin:0;">All Users - Assign Plan</h2>
+  </div>
+
+  <!-- Filter -->
+  <div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:20px;">
+    <form method="get" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+      <select name="role" class="f-input" onchange="this.form.submit()"
+              style="padding:8px 14px; border-radius:8px; border:1px solid #e5e7eb; font-size:13px;">
+        <option value="hospital" {% if role == 'hospital' %}selected{% endif %}>Hospital</option>
+        <option value="doctor"   {% if role == 'doctor'   %}selected{% endif %}>Doctor</option>
+        <option value="nurse"    {% if role == 'nurse'     %}selected{% endif %}>Nurse</option>
+      </select>
+      <input type="text" name="search" placeholder="Search username..."
+             value="{{ search }}"
+             style="padding:8px 14px; border-radius:8px; border:1px solid #e5e7eb; font-size:13px; flex:1; min-width:200px;">
+      <button type="submit"
+              style="background:#534AB7; color:#fff; border:none; padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600;">
+        Search
+      </button>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden;">
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="padding:11px 18px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; text-align:left; border-bottom:1px solid #f3f4f6;">User</th>
+          <th style="padding:11px 18px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; text-align:left; border-bottom:1px solid #f3f4f6;">Role</th>
+          <th style="padding:11px 18px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; text-align:left; border-bottom:1px solid #f3f4f6;">Current Plan</th>
+          <th style="padding:11px 18px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; text-align:left; border-bottom:1px solid #f3f4f6;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr style="border-bottom:1px solid #f9fafb;">
+          <td style="padding:14px 18px; font-size:13px; font-weight:600;">{{ user.username }}</td>
+          <td style="padding:14px 18px; font-size:13px; color:#9ca3af; text-transform:capitalize;">{{ user.role }}</td>
+          <td style="padding:14px 18px; font-size:13px;">
+            {% if user.current_plan %}
+              <span style="background:#EEEDFE; color:#534AB7; font-size:11px; font-weight:600; padding:4px 10px; border-radius:99px;">
+                {{ user.current_plan.plan.name }}
+              </span>
+            {% else %}
+              <span style="color:#ef4444; font-size:12px; font-weight:500;">No Plan</span>
+            {% endif %}
+          </td>
+          <td style="padding:14px 18px; text-align:right;">
+            <a href="{% url 'admin_assign_plan' user.pk %}"
+               style="font-size:12px; font-weight:500; padding:5px 12px; border-radius:7px; border:1px solid #e5e7eb; background:#fff; color:#374151; text-decoration:none;">
+              {% if user.current_plan %}Change Plan{% else %}Assign Plan{% endif %}
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" style="text-align:center; padding:40px; color:#9ca3af;">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

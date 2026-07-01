@@ -1,0 +1,164 @@
+{% extends 'admin_panel/base.html' %}
+{% block title %}Vacancies{% endblock %}
+{% block page_title %}Vacancy Management{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    /* Filter Bar */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+    .filter-btn {
+        padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+        text-decoration: none; border: 1px solid #e5e7eb; color: #6b7280; background: white;
+        white-space: nowrap; transition: all 0.2s;
+    }
+    .filter-btn.active { border-color: #534AB7; color: #534AB7; background: #EEEDFE; }
+
+    /* Desktop Table Styling */
+    .desktop-only { display: block; background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #f9fafb; padding: 14px 20px; font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
+    td { padding: 16px 20px; font-size: 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+    tr:hover td { background: #fafafa; }
+
+    /* Mobile Card Styling */
+    .mobile-only { display: none; }
+    .vac-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 18px; margin-bottom: 14px; position: relative;
+    }
+    .card-row { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start; }
+    .card-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
+    .card-val { font-size: 14px; font-weight: 600; color: #111827; }
+    
+    .salary-text { color: #1D9E75; font-weight: 700; }
+
+    /* Badges */
+    .badge { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .badge-active { background: #E1F5EE; color: #1D9E75; }
+    .badge-inactive { background: #f3f4f6; color: #6b7280; }
+    .badge-urgent { background: #FCEBEB; color: #E24B4A; margin-right: 4px; }
+
+    /* Action Button */
+    .btn-deactivate { 
+        width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; 
+        cursor: pointer; border: 1px solid #E24B4A; background: white; color: #E24B4A;
+        transition: all 0.2s; margin-top: 8px;
+    }
+    .btn-deactivate:hover { background: #FCEBEB; }
+
+    @media(max-width: 768px) {
+        .desktop-only { display: none; }
+        .mobile-only { display: block; }
+    }
+</style>
+
+<div class="dash-wrap">
+    
+    <div class="filter-bar">
+        <a href="?status=all"      class="filter-btn {% if status == 'all' %}active{% endif %}">All Vacancies</a>
+        <a href="?status=active"   class="filter-btn {% if status == 'active' %}active{% endif %}">Active</a>
+        <a href="?status=inactive" class="filter-btn {% if status == 'inactive' %}active{% endif %}">Inactive</a>
+        <a href="?status=urgent"   class="filter-btn {% if status == 'urgent' %}active{% endif %}">Urgent</a>
+    </div>
+
+    <div class="desktop-only">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hospital</th>
+                    <th>Staff Type</th>
+                    <th>Salary</th>
+                    <th>Posted Date</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vacancies %}
+                <tr>
+                    <td>
+                        <div style="font-weight:600; color:#111827;">{{ v.hospital_name }}</div>
+                        <div style="font-size:12px; color:#9ca3af;">{{ v.city }}</div>
+                    </td>
+                    <td><span style="font-weight:500;">{{ v.get_staff_type_display }}</span></td>
+                    <td class="salary-text">₹{{ v.salary }}</td>
+                    <td style="color:#6b7280; font-size:13px;">{{ v.start_date }}</td>
+                    <td>
+                        {% if v.is_urgent %}<span class="badge badge-urgent">Urgent</span>{% endif %}
+                        <span class="badge {% if v.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                            {% if v.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td style="text-align: right;">
+                        {% if v.is_active %}
+                        <form method="post" action="{% url 'admin_vacancy_deactivate' v.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none; border:none; color:#E24B4A; font-size:12px; font-weight:700; cursor:pointer;" onclick="return confirm('Deactivate karein?')">Deactivate</button>
+                        </form>
+                        {% else %}
+                        <span style="font-size:12px; color:#9ca3af;">Closed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mobile-only">
+        {% for v in vacancies %}
+        <div class="vac-card">
+            <div class="card-row">
+                <div style="max-width: 70%;">
+                    <span class="card-label">Hospital</span>
+                    <div class="card-val">{{ v.hospital_name }}</div>
+                    <div style="font-size:11px; color:#9ca3af;">{{ v.city }}</div>
+                </div>
+                <div style="text-align: right;">
+                    {% if v.is_urgent %}<div class="badge badge-urgent" style="margin-bottom:4px; display:inline-block;">Urgent</div><br>{% endif %}
+                    <span class="badge {% if v.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                        {% if v.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-row">
+                <div>
+                    <span class="card-label">Requirement</span>
+                    <div class="card-val">{{ v.get_staff_type_display }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <span class="card-label">Salary</span>
+                    <div class="card-val salary-text">₹{{ v.salary }}</div>
+                </div>
+            </div>
+
+            <div class="card-row" style="margin-bottom: 0;">
+                <div>
+                    <span class="card-label">Posted Date</span>
+                    <div class="card-val" style="font-size:13px; color:#6b7280;">{{ v.start_date }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <span class="card-label">Posted By</span>
+                    <div class="card-val" style="font-size:12px;">{{ v.posted_by.username }}</div>
+                </div>
+            </div>
+
+            {% if v.is_active %}
+            <form method="post" action="{% url 'admin_vacancy_deactivate' v.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-deactivate" onclick="return confirm('Deactivate karein?')">Deactivate Vacancy</button>
+            </form>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div style="text-align:center; padding: 40px; color:#9ca3af; background:white; border-radius:12px; border:1px solid #e5e7eb;">
+            No vacancies found.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,374 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}{% if edit_mode %}Edit Shift{% else %}Post New Shift{% endif %}{% endblock %}
+{% block page_title %}{% if edit_mode %}Edit Shift{% else %}Post New Shift{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    .form-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 32px; max-width: 800px; margin: 0 auto;
+    }
+
+    .form-section-title {
+        font-size: 11px; font-weight: 700; color: #9ca3af;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin-bottom: 20px; border-bottom: 1px solid #f3f4f6;
+        padding-bottom: 10px; display: block;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .label-text { font-size: 13px; font-weight: 600; color: #374151; }
+    .required-star { color: #E24B4A; margin-left: 2px; }
+
+    .input-field {
+        padding: 10px 14px; border-radius: 8px; border: 1px solid #d1d5db;
+        font-size: 14px; outline: none; transition: border-color 0.2s;
+        width: 100%; box-sizing: border-box;
+    }
+    .input-field:focus { border-color: #534AB7; box-shadow: 0 0 0 3px rgba(83,74,183,0.1); }
+    textarea.input-field { resize: vertical; min-height: 100px; }
+
+    .urgent-check {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 16px; background: #fff1f2; border-radius: 8px;
+        border: 1px solid #fecaca; cursor: pointer; transition: 0.2s;
+    }
+    .urgent-check:hover { background: #ffe4e6; }
+    .urgent-text { font-size: 13px; font-weight: 700; color: #E24B4A; }
+
+    .form-actions {
+        display: flex; gap: 12px; margin-top: 32px;
+        border-top: 1px solid #f3f4f6; padding-top: 24px;
+    }
+    .btn-submit {
+        flex: 2; padding: 12px; border-radius: 8px; background: #534AB7;
+        color: white; border: none; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .btn-cancel {
+        flex: 1; padding: 12px; border-radius: 8px; background: white;
+        color: #6b7280; border: 1px solid #e5e7eb; text-align: center;
+        text-decoration: none; font-size: 14px; font-weight: 600;
+    }
+    .error-list { color: #E24B4A; font-size: 12px; margin-top: 4px; padding-left: 15px; }
+
+    @media(max-width: 640px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .form-card { padding: 20px; }
+    }
+</style>
+
+<div class="dash-wrap">
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px; margin-bottom:20px; color:#b91c1c; font-size:13px;">
+                <strong>Form Errors:</strong><br>
+                {% for field, errors in form.errors.items %}
+                    <div><b>{{ field }}:</b> {{ errors|join:", " }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- ───── Hospital & Location ───── -->
+            <span class="form-section-title">Hospital & Location</span>
+            <div class="form-grid">
+
+                <div class="form-group full">
+                    <label class="label-text">Hospital Name<span class="required-star">*</span></label>
+                    <input type="text" name="hospital_name"
+                           value="{{ form.hospital_name.value|default:'' }}"
+                           class="input-field" placeholder="e.g. City Care Hospital" required>
+                    {% if form.hospital_name.errors %}
+                        <ul class="error-list">{% for e in form.hospital_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group full">
+                    <label class="label-text">📍 Location on Map (Google Maps Link)</label>
+                    <input type="url" name="location_link"
+                           value="{{ form.location_link.value|default:'' }}"
+                           class="input-field" placeholder="https://maps.google.com/...">
+                    <small style="color:#9ca3af; font-size:11px; margin-top:4px;">
+                        Optional — Google Maps pe hospital search karo, link copy karke paste karo
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">Ward Type<span class="required-star">*</span></label>
+                    <select name="ward_type" class="input-field" required>
+                        {% for val, label in form.fields.ward_type.choices %}
+                            {% if val %}
+                            <option value="{{ val }}" {% if form.ward_type.value == val %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">Number of Beds</label>
+                    <input type="number" name="bed_count"
+                           value="{{ form.bed_count.value|default:'1' }}"
+                           class="input-field" min="1">
+                </div>
+
+                <div class="form-group full">
+                    <label class="label-text">Complete Address<span class="required-star">*</span></label>
+                    <input type="text" name="address"
+                           value="{{ form.address.value|default:'' }}"
+                           class="input-field" placeholder="Building, Street, Landmark" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">Area / Sector</label>
+                    <input type="text" name="area"
+                           value="{{ form.area.value|default:'' }}"
+                           class="input-field" placeholder="e.g. Rohini Sec-7">
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">City<span class="required-star">*</span></label>
+                    <div style="position:relative;">
+                        <input type="text" id="city_search_shift" name="city"
+                               class="input-field" placeholder="Search city..."
+                               autocomplete="off"
+                               value="{{ form.city.value|default:'' }}" required>
+                        <div id="city_dropdown_shift" style="
+                            display:none; position:absolute; top:100%; left:0; right:0;
+                            background:#fff; border:1px solid #d1d5db; border-radius:8px;
+                            max-height:200px; overflow-y:auto; z-index:999;
+                            box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-top:4px;
+                        "></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ───── Shift Requirements & Timing ───── -->
+            <span class="form-section-title">Shift Requirements & Timing</span>
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label class="label-text">Shift Role<span class="required-star">*</span></label>
+                    <select name="target_role" id="id_target_role" class="input-field" required
+                            {% if role_locked %}disabled{% endif %}>
+                        {% if role_locked %}
+                            <option value="{{ default_role }}" selected>
+                                {% if default_role == 'doctor' %}Doctor{% else %}Nurse{% endif %}
+                            </option>
+                        {% else %}
+                            {% for val, label in form.fields.target_role.choices %}
+                                <option value="{{ val }}" {% if val == default_role %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                    {% if form.target_role.errors %}
+                        <ul class="error-list">{% for e in form.target_role.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">Qualification Required<span class="required-star">*</span></label>
+                    <select name="qualification_required" id="id_qualification_required" class="input-field" required>
+                        {% for val, label in form.fields.qualification_required.choices %}
+                            <option value="{{ val }}" {% if form.qualification_required.value == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.qualification_required.errors %}
+                        <ul class="error-list">{% for e in form.qualification_required.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">Shift Type<span class="required-star">*</span></label>
+                    <select name="shift_type" class="input-field" required>
+                        {% for val, label in form.fields.shift_type.choices %}
+                            <option value="{{ val }}" {% if form.shift_type.value == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">Start Date<span class="required-star">*</span></label>
+                    <input type="date" name="start_date"
+                           value="{{ form.start_date.value|date:'Y-m-d' }}"
+                           class="input-field" required>
+                </div>
+                <div class="form-group" id="end_date_group" style="display:none;">
+    <label class="label-text">End Date<span class="required-star">*</span></label>
+    <input type="date" name="end_date" id="end_date_input"
+           value="{{ form.end_date.value|date:'Y-m-d' }}"
+           class="input-field">
+</div>
+
+                <div class="form-group">
+                    <label class="label-text">Duty In Time<span class="required-star">*</span></label>
+                    <input type="time" name="start_time"
+                           value="{{ form.start_time.value|time:'H:i' }}"
+                           class="input-field" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-text">Duty Out Time<span class="required-star">*</span></label>
+                    <input type="time" name="end_time"
+                           value="{{ form.end_time.value|time:'H:i' }}"
+                           class="input-field" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="label-text">Shift Payment (₹)  (As Per Shift)<span class="required-star">*</span></label>
+                    <input type="number" name="pay"
+                           value="{{ form.pay.value|default:'' }}"
+                           class="input-field" placeholder="e.g. 1500" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="label-text">Instructions & Requirements</label>
+                    <textarea name="requirements" class="input-field"
+                              placeholder="List items such as: Bring ID proof, Scrub suit required, etc.">{{ form.requirements.value|default:'' }}</textarea>
+                </div>
+
+            </div>
+
+            {% if role_locked %}
+                <input type="hidden" name="target_role" value="{{ default_role }}">
+            {% endif %}
+
+            {% if can_post_urgent %}
+<label class="urgent-check" style="margin-top: 20px;">
+    <input type="checkbox" name="is_urgent" {% if form.is_urgent.value %}checked{% endif %}>
+    <span class="urgent-text">Mark this shift as URGENT (High Priority)</span>
+</label>
+{% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+    {% if edit_mode %}Update Shift{% else %}Publish Shift{% endif %}
+</button>
+                <a href="{% url cancel_url %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const qualData = {
+    doctor: [
+        ['mbbs',      'MBBS'],
+        ['bams',      'BAMS'],
+        ['bhms',      'BHMS'],
+        ['bams_bhms', 'BAMS/BHMS'],
+    ],
+    nurse: [
+        ['gnm',         'GNM'],
+        ['bsc_nursing', 'B.Sc Nursing'],
+        ['anm',         'ANM'],
+        ['msc_nursing', 'M.Sc Nursing'],
+    ],
+};
+
+const defaultRole = "{{ default_role }}";
+const roleLocked  = {{ role_locked|yesno:"true,false" }};
+const editMode    = {{ edit_mode|yesno:"true,false" }};
+const savedRole   = "{{ form.target_role.value|default:'' }}";
+const savedQual   = "{{ form.qualification_required.value|default:'' }}";
+
+function updateQualDropdown(preserveValue) {
+    const role    = document.getElementById('id_target_role').value;
+    const qualSel = document.getElementById('id_qualification_required');
+    const current = preserveValue || qualSel.value;
+    qualSel.innerHTML = '';
+    (qualData[role] || []).forEach(([val, label]) => {
+        const opt       = document.createElement('option');
+        opt.value       = val;
+        opt.textContent = label;
+        if (val === current) opt.selected = true;
+        qualSel.appendChild(opt);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const roleSelect = document.getElementById('id_target_role');
+
+    // ✅ Hospital edit kare to saved role use karo, baaki sab case me defaultRole hi
+    const useRole = (!roleLocked && editMode && savedRole) ? savedRole : defaultRole;
+    roleSelect.value = useRole;
+
+    if (roleLocked) roleSelect.disabled = true;
+
+    // ✅ Qualification bhi edit mode me saved value se preserve karo
+    updateQualDropdown(editMode ? savedQual : null);
+});
+
+document.getElementById('id_target_role')
+        .addEventListener('change', () => updateQualDropdown());
+
+// ── City Dropdown ──
+const css   = document.getElementById('city_search_shift');
+const cds   = document.getElementById('city_dropdown_shift');
+let csTimer = null;
+
+if (css) {
+    css.addEventListener('input', function () {
+        const q = this.value.trim();
+        clearTimeout(csTimer);
+        if (q.length < 1) { cds.style.display = 'none'; return; }
+
+        csTimer = setTimeout(() => {
+            fetch(`/adminpanel/get-cities/?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => {
+                    cds.innerHTML = '';
+                    if (!data.cities.length) {
+                        cds.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:#9ca3af;text-align:center;">No city found</div>';
+                    } else {
+                        data.cities.forEach(c => {
+                            const div = document.createElement('div');
+                            div.style.cssText = 'padding:10px 14px;font-size:14px;color:#111827;cursor:pointer;border-bottom:1px solid #f3f4f6;';
+                            div.textContent = `${c.name}, ${c.state}`;
+                            div.addEventListener('mouseenter', () => div.style.background = '#f0fdf4');
+                            div.addEventListener('mouseleave', () => div.style.background = '');
+                            div.addEventListener('click', () => {
+                                css.value = c.name;
+                                cds.style.display = 'none';
+                            });
+                            cds.appendChild(div);
+                        });
+                    }
+                    cds.style.display = 'block';
+                });
+        }, 300);
+    });
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#city_search_shift') && !e.target.closest('#city_dropdown_shift')) {
+            cds.style.display = 'none';
+        }
+    });
+}
+
+// ── End Date Toggle ──
+const shiftTypeSelect = document.querySelector('select[name="shift_type"]');
+const endDateGroup    = document.getElementById('end_date_group');
+const endDateInput    = document.getElementById('end_date_input');
+
+function toggleEndDate() {
+    const isMultiple = shiftTypeSelect.value === 'multiple';  // apna actual value check karo
+    endDateGroup.style.display = isMultiple ? '' : 'none';
+    endDateInput.required = isMultiple;
+    if (!isMultiple && !editMode) endDateInput.value = '';   // ✅ edit mode me clear na karo
+}
+
+shiftTypeSelect.addEventListener('change', toggleEndDate);
+
+// Page load pe bhi check karo (edit mode ke liye)
+document.addEventListener('DOMContentLoaded', toggleEndDate);
+</script>
+
+{% endblock %}

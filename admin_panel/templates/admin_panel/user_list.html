@@ -1,0 +1,174 @@
+{% extends 'admin_panel/base.html' %}
+{% block title %}Users{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    /* Action Header */
+    .action-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+    }
+
+    .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .filter-btn {
+        padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+        text-decoration: none; border: 1px solid #e5e7eb; color: #6b7280; background: white;
+        white-space: nowrap; transition: all 0.2s;
+    }
+    .filter-btn.active { border-color: #534AB7; color: #534AB7; background: #EEEDFE; }
+
+    .search-box {
+        padding: 8px 16px; border-radius: 8px; border: 1px solid #e5e7eb;
+        font-size: 14px; width: 260px; outline: none;
+    }
+
+    /* Desktop Table Styling */
+    .desktop-only { display: block; background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #f9fafb; padding: 14px 20px; font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
+    td { padding: 16px 20px; font-size: 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+
+    /* Mobile Card Styling (Hidden by default) */
+    .mobile-only { display: none; }
+    .user-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 16px; margin-bottom: 12px; position: relative;
+    }
+    .card-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .card-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 600; }
+    .card-val { font-size: 14px; font-weight: 600; color: #111827; }
+
+    /* Badges & Buttons */
+    .badge { padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+    .badge-active { background: #E1F5EE; color: #1D9E75; }
+    .badge-inactive { background: #FCEBEB; color: #E24B4A; }
+
+    .btn-action { width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
+    .btn-ban { background: #fee2e2; color: #b91c1c; }
+    .btn-unban { background: #dcfce7; color: #15803d; }
+
+    /* Responsive Logic */
+    @media(max-width: 768px) {
+        .desktop-only { display: none; }
+        .mobile-only { display: block; }
+        .action-header { flex-direction: column; align-items: stretch; }
+        .search-box { width: 100%; }
+    }
+</style>
+
+<div class="dash-wrap">
+    
+    <div class="action-header">
+     <div class="filter-bar">
+    <a href="?role=all" class="filter-btn {% if role == 'all' %}active{% endif %}">All Users</a>
+    <a href="?role=doctor" class="filter-btn {% if role == 'doctor' %}active{% endif %}">Doctors</a>
+    <a href="?role=nurse" class="filter-btn {% if role == 'nurse' %}active{% endif %}">Nurses</a>
+    <a href="?role=hospital" class="filter-btn {% if role == 'hospital' %}active{% endif %}">Hospitals</a>
+    <a href="?role=all&status=banned" class="filter-btn {% if status == 'banned' %}active{% endif %}" 
+       style="{% if status == 'banned' %}border-color:#E24B4A; color:#E24B4A; background:#FCEBEB;{% endif %}">
+        🚫 Banned
+    </a>
+</div>
+        
+        <form method="get">
+            <input type="hidden" name="role" value="{{ role }}">
+            <input type="text" name="search" value="{{ search }}" class="search-box" placeholder="Search users...">
+        </form>
+    </div>
+
+    <div class="desktop-only">
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Mobile</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td style="font-weight: 600;">{{ u.username }}</td>
+                    <td style="text-transform: capitalize; color: #6b7280;">{{ u.role }}</td>
+                    <td>{{ u.mobile|default:'—' }}</td>
+                    <td>
+                        <span class="badge {% if u.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                            {% if u.is_active %}Active{% else %}Banned{% endif %}
+                        </span>
+                    </td>
+                    <td style="font-size: 12px; color: #9ca3af;">{{ u.date_joined|date:"d M Y" }}</td>
+                    <td style="text-align: right;">
+                        {% if not u.is_staff %}
+                        <form method="post" action="{% url 'admin_user_toggle' u.pk %}">
+                            {% csrf_token %}
+                            {% if u.is_active %}
+                                <button type="submit" class="badge badge-inactive" style="border:none; cursor:pointer;" onclick="return confirm('Ban user?')">Ban</button>
+                            {% else %}
+                                <button type="submit" class="badge badge-active" style="border:none; cursor:pointer;">Unban</button>
+                            {% endif %}
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mobile-only">
+        {% for u in users %}
+        <div class="user-card">
+            <div class="card-row">
+                <div>
+                    <span class="card-label">Username</span>
+                    <div class="card-val">{{ u.username }}</div>
+                </div>
+                <span class="badge {% if u.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                    {% if u.is_active %}Active{% else %}Banned{% endif %}
+                </span>
+            </div>
+            
+            <div class="card-row">
+                <div>
+                    <span class="card-label">Role</span>
+                    <div class="card-val" style="text-transform: capitalize;">{{ u.role }}</div>
+                </div>
+                <div>
+                    <span class="card-label">Joined</span>
+                    <div class="card-val" style="font-size: 12px;">{{ u.date_joined|date:"d M Y" }}</div>
+                </div>
+            </div>
+
+            <div class="card-row">
+                <div>
+                    <span class="card-label">Mobile</span>
+                    <div class="card-val">{{ u.mobile|default:'—' }}</div>
+                </div>
+            </div>
+
+            {% if not u.is_staff %}
+            <form method="post" action="{% url 'admin_user_toggle' u.pk %}">
+                {% csrf_token %}
+                {% if u.is_active %}
+                    <button type="submit" class="btn-action btn-ban" onclick="return confirm('Ban user?')">Ban User</button>
+                {% else %}
+                    <button type="submit" class="btn-action btn-unban">Unban User</button>
+                {% endif %}
+            </form>
+            {% else %}
+            <div style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 10px;">ADMIN ACCOUNT</div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p style="text-align:center; padding: 20px; color: #9ca3af;">No users found.</p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'admin_panel/base.html' %}
+{% block title %}Shifts{% endblock %}
+{% block page_title %}Shift Management{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+    .filter-btn {
+        padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+        text-decoration: none; border: 1px solid #e5e7eb; color: #6b7280; background: white;
+        white-space: nowrap; transition: all 0.2s;
+    }
+    .filter-btn.active { border-color: #534AB7; color: #534AB7; background: #EEEDFE; }
+    .shift-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 14px;
+        padding: 20px; margin-bottom: 16px;
+    }
+    .badge { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .badge-active   { background: #E1F5EE; color: #1D9E75; }
+    .badge-inactive { background: #f3f4f6; color: #6b7280; }
+    .badge-urgent   { background: #FCEBEB; color: #E24B4A; }
+    .badge-paid     { background: #E1F5EE; color: #1D9E75; }
+    .badge-unpaid   { background: #fff8e1; color: #b45309; }
+    .badge-disputed { background: #FCEBEB; color: #E24B4A; }
+    .badge-pending  { background: #f3f4f6; color: #6b7280; }
+    .section-label { font-size: 10px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .app-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .app-row:last-child { border-bottom: none; }
+</style>
+
+<div class="dash-wrap">
+
+    <div class="filter-bar">
+        <a href="?status=all"      class="filter-btn {% if status == 'all' %}active{% endif %}">All Shifts</a>
+        <a href="?status=active"   class="filter-btn {% if status == 'active' %}active{% endif %}">Active</a>
+        <a href="?status=inactive" class="filter-btn {% if status == 'inactive' %}active{% endif %}">Inactive</a>
+        <a href="?status=urgent"   class="filter-btn {% if status == 'urgent' %}active{% endif %}">Urgent</a>
+        <a href="?status=disputed" class="filter-btn {% if status == 'disputed' %}active{% endif %}">
+            Disputed
+        </a>
+    </div>
+
+    {% for shift in shifts %}
+    <div class="shift-card">
+
+        <!-- Top Row: Shift Info -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div>
+                <div style="font-size:16px; font-weight:800; color:#111827;">{{ shift.hospital_name }}</div>
+                <div style="font-size:12px; color:#9ca3af; margin-top:2px;">
+                    {{ shift.get_ward_type_display }} &bull; {{ shift.city }} &bull; {{ shift.start_date }}
+                </div>
+                <div style="font-size:12px; color:#6b7280; margin-top:2px;">
+                    Posted by: <strong>{{ shift.posted_by.username }}</strong>
+                    ({{ shift.posted_by.role }}) &bull; {{ shift.posted_by.mobile }}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:18px; font-weight:800; color:#1D9E75;">₹{{ shift.pay }}</div>
+                <div style="margin-top:4px; display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap;">
+                    {% if shift.is_urgent %}<span class="badge badge-urgent">Urgent</span>{% endif %}
+                    <span class="badge {% if shift.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                        {% if shift.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applicants Section -->
+        {% with apps=shift.applications.all %}
+        {% if apps %}
+        <div style="border-top:1px solid #f3f4f6; padding-top:14px;">
+            <div class="section-label">Applicants ({{ apps|length }})</div>
+
+            {% for app in apps %}
+            <div class="app-row">
+                <!-- Applicant Info -->
+                <div style="flex:1;">
+                    <div style="font-size:13px; font-weight:700; color:#111827;">
+                        {% if app.applicant.role == 'doctor' %}
+                            {% if app.applicant.doctor_profile %}
+                                {{ app.applicant.doctor_profile.full_name }}
+                            {% else %}
+                                {{ app.applicant.username }}
+                            {% endif %}
+                        {% elif app.applicant.role == 'nurse' %}
+                            {% if app.applicant.nurse_profile %}
+                                {{ app.applicant.nurse_profile.full_name }}
+                            {% else %}
+                                {{ app.applicant.username }}
+                            {% endif %}
+                        {% else %}
+                            {{ app.applicant.username }}
+                        {% endif %}
+                        <span style="font-size:10px; color:#9ca3af; font-weight:600;">
+                            ({{ app.applicant.role }})
+                        </span>
+                    </div>
+                    <div style="font-size:11px; color:#6b7280; margin-top:2px;">
+                        {{ app.applicant.mobile }}
+                    </div>
+                </div>
+
+                <!-- Application Status -->
+                <div style="text-align:center; padding:0 12px;">
+                    <div class="section-label">Status</div>
+                    <span class="badge badge-{% if app.status == 'accepted' %}active{% elif app.status == 'rejected' %}urgent{% else %}pending{% endif %}">
+                        {{ app.status }}
+                    </span>
+                </div>
+
+                <!-- Onboard Status -->
+                <div style="text-align:center; padding:0 12px;">
+                    <div class="section-label">Shift Progress</div>
+                    {% if app.status == 'accepted' %}
+                        <span class="badge badge-{% if app.onboard_status == 'completed' %}active{% elif app.onboard_status == 'pending' %}inactive{% else %}pending{% endif %}">
+                            {{ app.onboard_status }}
+                        </span>
+                    {% else %}
+                        <span style="font-size:11px; color:#d1d5db;">—</span>
+                    {% endif %}
+                </div>
+
+                <!-- Payment Status -->
+           <!-- Payment Status -->
+<div style="text-align:right; min-width:140px;">
+    <div class="section-label">Payment</div>
+    {% if app.onboard_status == 'completed' %}
+
+        <!-- Overall Status Badge -->
+        <span class="badge badge-{{ app.payment_status }}">
+            {{ app.payment_status|capfirst }}
+        </span>
+        {% if app.payment_method %}
+        <div style="font-size:10px; color:#9ca3af; margin-top:3px;">
+            via {{ app.payment_method|upper }}
+        </div>
+        {% endif %}
+
+        <!-- Payer Status -->
+        <div style="margin-top:8px; display:flex; align-items:center; gap:5px;">
+            {% if app.hospital_marked_paid %}
+                <span style="width:16px; height:16px; border-radius:50%; background:#E1F5EE;
+                             display:inline-flex; align-items:center; justify-content:center;">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+            {% else %}
+                <span style="width:16px; height:16px; border-radius:50%; background:#f3f4f6;
+                             display:inline-flex; align-items:center; justify-content:center;">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+            {% endif %}
+            <span style="font-size:11px; color:#6b7280; font-weight:600;">
+                Payer marked paid
+            </span>
+        </div>
+
+        <!-- Locum Status -->
+        <div style="margin-top:5px; display:flex; align-items:center; gap:5px;">
+            {% if app.locum_confirmed_paid %}
+                <span style="width:16px; height:16px; border-radius:50%; background:#E1F5EE;
+                             display:inline-flex; align-items:center; justify-content:center;">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+            {% elif app.hospital_marked_paid and app.payment_status == 'disputed' %}
+                <span style="width:16px; height:16px; border-radius:50%; background:#FCEBEB;
+                             display:inline-flex; align-items:center; justify-content:center;">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+            {% else %}
+                <span style="width:16px; height:16px; border-radius:50%; background:#f3f4f6;
+                             display:inline-flex; align-items:center; justify-content:center;">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+            {% endif %}
+            <span style="font-size:11px; color:#6b7280; font-weight:600;">
+                Locum confirmed
+            </span>
+        </div>
+
+        {% if app.payment_status == 'disputed' %}
+        <div style="margin-top:6px; font-size:10px; font-weight:700; color:#E24B4A;">
+            ⚠ Dispute — Review needed
+        </div>
+        {% endif %}
+
+    {% else %}
+        <span style="font-size:11px; color:#d1d5db;">—</span>
+    {% endif %}
+</div>
+            </div>
+            {% endfor %}
+
+        </div>
+        {% else %}
+        <div style="border-top:1px solid #f3f4f6; padding-top:12px; font-size:12px; color:#9ca3af;">
+            No applicants yet
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Admin Action -->
+        {% if shift.is_active %}
+        <div style="margin-top:14px; padding-top:12px; border-top:1px solid #f3f4f6; display:flex; justify-content:flex-end;">
+            <form method="post" action="{% url 'admin_shift_deactivate' shift.pk %}">
+                {% csrf_token %}
+                <button type="submit"
+                        style="padding:7px 16px; border-radius:8px; border:1px solid #E24B4A;
+                               background:white; color:#E24B4A; font-size:12px; font-weight:700;
+                               cursor:pointer;"
+                        onclick="return confirm('Deactivate this shift?')">
+                    Deactivate
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+    {% empty %}
+    <div style="text-align:center; padding:48px; color:#9ca3af; background:white;
+                border-radius:12px; border:1px solid #e5e7eb;">
+        No shifts found.
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

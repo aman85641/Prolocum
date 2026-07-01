@@ -1,0 +1,120 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}My Applications{% endblock %}
+{% block page_title %}My Vacancy Applications{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+    /* Application Card Style */
+    .app-card { 
+        background: #fff; border: 1px solid #e2e8f0; 
+        border-radius: 16px; padding: 24px; margin-bottom: 16px; 
+        position: relative; transition: all 0.2s ease; 
+    }
+    .app-card:hover { border-color: #cbd5e1; transform: translateY(-2px); box-shadow: 0 10px 20px -10px rgba(0,0,0,0.05); }
+
+    .hosp-name { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 4px; display: block; letter-spacing: -0.3px; }
+    
+    /* Meta Info */
+    .meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .meta-tag {
+        padding: 4px 10px; border-radius: 6px; font-size: 10px; 
+        font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;
+    }
+    .tag-purple { background: #EEEDFE; color: #534AB7; border-color: #dcd7f9; }
+
+    .applied-on { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Payout Styling */
+    .salary-text { font-size: 20px; font-weight: 800; color: #10b981; }
+    .salary-label { font-size: 9px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; }
+
+    /* Status Badges - Admin Style */
+    .status-badge {
+        display: inline-flex; align-items: center; padding: 4px 12px;
+        border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .status-applied { background: #EEEDFE; color: #534AB7; }
+    .status-accepted { background: #E1F5EE; color: #10b981; }
+    .status-rejected { background: #FCEBEB; color: #E24B4A; }
+    .status-withdrawn { background: #f1f5f9; color: #64748b; }
+
+    /* Buttons */
+    .btn-withdraw-link {
+        background: none; border: none; color: #94a3b8; font-size: 12px;
+        font-weight: 700; cursor: pointer; text-decoration: none;
+        padding: 4px 8px; transition: color 0.2s; margin-top: 8px;
+    }
+    .btn-withdraw-link:hover { color: #E24B4A; text-decoration: underline; }
+
+    /* Empty State */
+    .empty-card { text-align: center; padding: 80px 20px; background: #f8fafc; border-radius: 16px; border: 2px dashed #e2e8f0; }
+
+    @media(max-width: 640px) {
+        .card-header-flex { flex-direction: column; gap: 16px; }
+        .status-area { align-items: flex-start !important; }
+    }
+</style>
+
+<div class="dash-wrap">
+
+    {% if applications %}
+        {% for app in applications %}
+        <div class="app-card">
+            <div class="card-header-flex" style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="flex: 1;">
+                    <span class="hosp-name">{{ app.vacancy.hospital_name }}</span>
+                    <div class="applied-on">Applied on {{ app.applied_at|date:"d M Y" }}</div>
+                    
+                    <div class="meta-row">
+                        <span class="meta-tag tag-purple">{{ app.vacancy.get_staff_type_display }}</span>
+                        {% if app.vacancy.ward_type %}
+                            <span class="meta-tag">{{ app.vacancy.get_ward_type_display }}</span>
+                        {% endif %}
+                        <span class="meta-tag">{{ app.vacancy.city }}</span>
+                    </div>
+                </div>
+
+                <div class="status-area" style="display:flex; flex-direction:column; align-items:flex-end; gap:12px;">
+                    <div style="text-align: right;">
+                        <span class="salary-label">Monthly Salary</span>
+                        <div class="salary-text">₹{{ app.vacancy.salary }}</div>
+                    </div>
+                    
+                    <div>
+                        {% if app.status == 'applied' %}
+                            <span class="status-badge status-applied">Under Review</span>
+                        {% elif app.status == 'accepted' %}
+                            <span class="status-badge status-accepted">Shortlisted</span>
+                        {% elif app.status == 'rejected' %}
+                            <span class="status-badge status-rejected">Not Selected</span>
+                        {% elif app.status == 'withdrawn' %}
+                            <span class="status-badge status-withdrawn">Withdrawn</span>
+                        {% endif %}
+                    </div>
+
+                    {% if app.status == 'applied' %}
+                    <form method="post" action="{% url 'withdraw_vacancy_application' app.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-withdraw-link" onclick="return confirm('Do you really want to withdraw this application?')">
+                            Withdraw Application
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-card">
+            <h3 style="color: #1e293b; margin-bottom: 8px;">No applications yet</h3>
+            <p style="color: #64748b; margin-bottom: 24px;">Browse available long-term vacancies and start your journey.</p>
+            <a href="{% url 'available_vacancies' %}" class="btn btn-primary" style="padding: 12px 24px; border-radius: 10px; font-weight: 700; text-decoration: none;">Explore Vacancies</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

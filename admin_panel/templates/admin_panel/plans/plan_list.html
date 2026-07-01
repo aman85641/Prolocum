@@ -1,0 +1,296 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block content %}
+<style>
+  .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .top-bar-title { font-size: 22px; font-weight: 600; color: #111827; margin: 0; }
+  .top-bar-sub { font-size: 13px; color: #9ca3af; margin-top: 3px; }
+
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .pill {
+    display: inline-flex; align-items: center; padding: 6px 14px;
+    border-radius: 99px; font-size: 12px; font-weight: 600;
+    text-decoration: none; transition: all .15s; border: none; cursor: pointer;
+  }
+  .pill-primary { background: #534AB7; color: #fff; }
+  .pill-warn    { background: #FAEEDA; color: #633806; }
+  .pill-info    { background: #E6F1FB; color: #185FA5; }
+  .pill-success { background: #EAF3DE; color: #27500A; }
+  .pill:hover { opacity: .85; }
+
+  .section-header { display: flex; align-items: center; gap: 10px; margin: 28px 0 12px; }
+  .section-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .6px; }
+
+  .reg-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; margin-top: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+  .reg-card-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #f3f4f6; }
+  .reg-card-title { font-size: 14px; font-weight: 600; color: #111827; }
+
+  .desktop-table { width: 100%; }
+  .desktop-table table { width: 100%; border-collapse: collapse; }
+  .desktop-table th {
+    font-size: 11px; font-weight: 700; color: #9ca3af;
+    text-transform: uppercase; letter-spacing: .4px;
+    padding: 11px 18px; text-align: left; border-bottom: 1px solid #f3f4f6;
+  }
+  .desktop-table td {
+    padding: 13px 18px; font-size: 13px; color: #111827;
+    border-bottom: 1px solid #f9fafb; vertical-align: middle;
+  }
+  .desktop-table tr:last-child td { border-bottom: none; }
+  .desktop-table tr:hover td { background: #fafafa; }
+
+  .badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; display: inline-flex; align-items: center; gap: 5px; }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+  .badge-active   { background: #EAF3DE; color: #27500A; }
+  .badge-active::before { background: #3B6D11; }
+  .badge-inactive { background: #FCEBEB; color: #791F1F; }
+  .badge-inactive::before { background: #A32D2D; }
+
+  /* Unlimited pill */
+  .unlim-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: linear-gradient(135deg, #ede9fe, #f3f0ff);
+    border: 1px solid #c4b5fd;
+    color: #6d28d9; font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 99px; letter-spacing: 0.2px;
+  }
+
+  /* Duration pill */
+  .dur-pill {
+    display: inline-block;
+    background: #f3f4f6; color: #374151;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 99px;
+  }
+
+  .price-val { color: #1D9E75; font-weight: 600; }
+
+  .view-btn {
+    font-size: 12px; font-weight: 500; padding: 5px 12px;
+    border-radius: 7px; border: 1px solid #e5e7eb;
+    background: #fff; color: #374151; text-decoration: none;
+  }
+  .view-btn:hover { background: #f9fafb; border-color: #d1d5db; }
+
+  .del-btn {
+    font-size: 12px; font-weight: 500; color: #ef4444;
+    background: none; border: none; cursor: pointer; margin-left: 8px;
+  }
+  .del-btn:hover { color: #b91c1c; }
+
+  .empty-row td { text-align: center; padding: 32px; color: #9ca3af; font-size: 13px; }
+
+  @media(max-width:640px) {
+    .desktop-table { display: none; }
+  }
+</style>
+
+<div class="dash-wrap">
+
+  <div class="top-bar">
+    <div>
+      <div class="top-bar-title">Plans Management</div>
+      <div class="top-bar-sub">Configure subscription tiers</div>
+    </div>
+    <a href="{% url 'admin_plan_create' %}" class="pill pill-primary">+ New Plan</a>
+  </div>
+
+  <div class="pill-row">
+    <a href="{% url 'admin_default_credits' %}" class="pill pill-warn">Default Free Credits Setting</a>
+    <a href="{% url 'admin_wallet_list' %}"     class="pill pill-info">Doctor / Nurse Wallets</a>
+    <a href="{% url 'admin_user_plan_list' %}"  class="pill pill-success">Hospital Plans History</a>
+  </div>
+
+  <!-- ───── DOCTOR PLANS ───── -->
+  <div class="section-header">
+    <span class="section-label">Doctor Plans</span>
+  </div>
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <span class="reg-card-title">🩺 Active Doctor Tiers</span>
+      <span style="font-size:12px;color:#9ca3af;">{{ doctor_plans|length }} plan{{ doctor_plans|length|pluralize }}</span>
+    </div>
+    <div class="desktop-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Tokens</th>
+            <th>Vacancy Limit</th>
+            <th>Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for plan in doctor_plans %}
+          <tr>
+            <td style="font-weight:600">{{ plan.name }}</td>
+            <td class="price-val">₹{{ plan.price }}</td>
+            <td><span class="dur-pill">{{ plan.get_duration_months_display }}</span></td>
+            <td>
+              {% if plan.unlimited_tokens %}
+                <span class="unlim-pill">∞ Unlimited</span>
+              {% else %}
+                {{ plan.tokens }} tokens
+              {% endif %}
+            </td>
+            <td>
+              {% if plan.unlimited_vacancy_apply %}
+                <span class="unlim-pill">∞ Unlimited</span>
+              {% else %}
+                {{ plan.vacancy_limit }} vacancies
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {% if plan.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+            <td style="text-align:right">
+              <a href="{% url 'admin_plan_edit' plan.pk %}" class="view-btn">Edit</a>
+              <form method="post" action="{% url 'admin_plan_delete' plan.pk %}" style="display:inline" onsubmit="return confirm('Delete this plan?')">
+                {% csrf_token %}
+                <button class="del-btn">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr class="empty-row"><td colspan="7">No doctor plans yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ───── NURSE PLANS ───── -->
+  <div class="section-header">
+    <span class="section-label">Nurse Plans</span>
+  </div>
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <span class="reg-card-title">💉 Active Nurse Tiers</span>
+      <span style="font-size:12px;color:#9ca3af;">{{ nurse_plans|length }} plan{{ nurse_plans|length|pluralize }}</span>
+    </div>
+    <div class="desktop-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Tokens</th>
+            <th>Vacancy Limit</th>
+            <th>Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for plan in nurse_plans %}
+          <tr>
+            <td style="font-weight:600">{{ plan.name }}</td>
+            <td class="price-val">₹{{ plan.price }}</td>
+            <td><span class="dur-pill">{{ plan.get_duration_months_display }}</span></td>
+            <td>
+              {% if plan.unlimited_tokens %}
+                <span class="unlim-pill">∞ Unlimited</span>
+              {% else %}
+                {{ plan.tokens }} tokens
+              {% endif %}
+            </td>
+            <td>
+              {% if plan.unlimited_vacancy_apply %}
+                <span class="unlim-pill">∞ Unlimited</span>
+              {% else %}
+                {{ plan.vacancy_limit }} vacancies
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {% if plan.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+            <td style="text-align:right">
+              <a href="{% url 'admin_plan_edit' plan.pk %}" class="view-btn">Edit</a>
+              <form method="post" action="{% url 'admin_plan_delete' plan.pk %}" style="display:inline" onsubmit="return confirm('Delete this plan?')">
+                {% csrf_token %}
+                <button class="del-btn">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr class="empty-row"><td colspan="7">No nurse plans yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ───── HOSPITAL PLANS ───── -->
+  <div class="section-header">
+    <span class="section-label">Hospital Plans</span>
+  </div>
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <span class="reg-card-title">🏥 Active Hospital Tiers</span>
+      <span style="font-size:12px;color:#9ca3af;">{{ hospital_plans|length }} plan{{ hospital_plans|length|pluralize }}</span>
+    </div>
+    <div class="desktop-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Shift Post</th>
+            <th>Vacancy Post</th>
+            <th>Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for plan in hospital_plans %}
+          <tr>
+            <td style="font-weight:600">{{ plan.name }}</td>
+            <td class="price-val">₹{{ plan.price }}</td>
+            <td><span class="dur-pill">{{ plan.get_duration_months_display }}</span></td>
+            <td>
+              {% if plan.unlimited_shift_post %}
+                <span class="unlim-pill">∞ Unlimited</span>
+              {% else %}
+                {{ plan.shift_post_limit }} shifts
+              {% endif %}
+            </td>
+            <td>
+              {% if plan.unlimited_vacancy_post %}
+                <span class="unlim-pill">∞ Unlimited</span>
+              {% else %}
+                {{ plan.vacancy_post_limit }} vacancies
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {% if plan.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+            <td style="text-align:right">
+              <a href="{% url 'admin_plan_edit' plan.pk %}" class="view-btn">Edit</a>
+              <form method="post" action="{% url 'admin_plan_delete' plan.pk %}" style="display:inline" onsubmit="return confirm('Delete this plan?')">
+                {% csrf_token %}
+                <button class="del-btn">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr class="empty-row"><td colspan="7">No hospital plans yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

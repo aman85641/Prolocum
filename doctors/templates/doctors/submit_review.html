@@ -1,0 +1,173 @@
+{% extends base_template|default:'doctors/base.html' %}
+{% block title %}Enter Review{% endblock %}
+{% block page_title %}Hospital Review{% endblock %}
+
+{% block content %}
+<style>
+    .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; display: flex; justify-content: center; }
+    
+    .review-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+        padding: 32px; width: 100%; max-width: 450px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Hospital Info Box */
+    .hosp-box {
+        background: #f8fafc; border-radius: 12px; padding: 16px;
+        margin-bottom: 24px; border: 1px solid #f1f5f9;
+    }
+    .hosp-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hosp-name { font-size: 16px; font-weight: 800; color: #1e293b; display: block; margin-top: 2px; }
+    .hosp-meta { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+    /* Star Rating Interaction */
+    .rating-group { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+    .star-item { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .star-icon { 
+        font-size: 36px; transition: all 0.2s ease; 
+        filter: grayscale(1); opacity: 0.2; 
+    }
+    .star-item:hover .star-icon { opacity: 0.5; transform: scale(1.1); }
+    .star-active { filter: grayscale(0) !important; opacity: 1 !important; }
+
+    /* Form Elements */
+    .form-label { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; display: block; }
+    .input-text {
+        width: 100%; border: 1px solid #d1d5db; border-radius: 10px;
+        padding: 12px; font-size: 14px; font-family: inherit;
+        resize: vertical; min-height: 100px; outline: none; transition: border-color 0.2s;
+    }
+    .input-text:focus { border-color: #534AB7; box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.1); }
+
+    .btn-submit {
+        width: 100%; padding: 14px; border-radius: 10px; background: #534AB7;
+        color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer;
+        transition: all 0.2s; margin-top: 10px;
+    }
+    .btn-submit:hover { background: #433a96; transform: translateY(-1px); }
+    
+    .btn-back {
+        display: block; text-align: center; margin-top: 16px;
+        font-size: 13px; color: #94a3b8; text-decoration: none; font-weight: 600;
+    }
+    .btn-back:hover { color: #534AB7; }
+</style>
+
+<div class="dash-wrap">
+    <div class="review-card">
+        
+        <div class="hosp-box">
+            <span class="hosp-label">Reviewing Facility</span>
+            <strong class="hosp-name">{{ application.shift.hospital_name }}</strong>
+            <div class="hosp-meta">
+                {{ application.shift.get_ward_type_display }} • {{ application.shift.start_date }}
+            </div>
+        </div>
+
+        <h3 style="font-size: 15px; font-weight: 800; color: #1e293b; margin-bottom: 20px; text-align: center;">
+            {% if existing %}Edit Your Review{% else %}Rate Your Experience{% endif %}
+        </h3>
+
+        <form method="post" id="reviewForm">
+            {% csrf_token %}
+
+            <div class="rating-group">
+                {% for i in "12345" %}
+                {% with val=forloop.counter %}
+                <label class="star-item">
+                    <input type="radio" name="rating" value="{{ val }}"
+                        {% if form.rating.value == val|stringformat:"s" %}checked{% endif %}
+                        style="display:none;" onchange="syncStars(this)">
+                    <span class="star-icon" data-val="{{ val }}">⭐</span>
+                    <span style="font-size: 10px; font-weight: 700; color: #cbd5e1;">{{ val }}</span>
+                </label>
+                {% endwith %}
+                {% endfor %}
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label class="form-label">How was the facility and staff?</label>
+                <textarea name="comment" class="input-text" placeholder="Share your experience about the hospital environment, staff cooperation, and payment process...">{{ form.comment.value|default:'' }}</textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                Submit Hospital Review
+            </button>
+        </form>
+<!-- Form ke baad, btn-back se pehle add karo -->
+{% if hospital_review %}
+<div style="margin-top: 24px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+    <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Hospital Ne Aapko Diya Review</span>
+    <div style="margin-top: 8px;">
+        <span style="font-size: 24px;">
+            {% for i in "12345" %}
+                {% if forloop.counter <= hospital_review.rating %}⭐{% else %}☆{% endif %}
+            {% endfor %}
+        </span>
+        <span style="font-size: 13px; font-weight: 700; color: #1e293b; margin-left: 8px;">{{ hospital_review.rating }}/5</span>
+    </div>
+    {% if hospital_review.comment %}
+    <p style="font-size: 13px; color: #64748b; margin-top: 8px; line-height: 1.6;">{{ hospital_review.comment }}</p>
+    {% endif %}
+</div>
+{% else %}
+<div style="margin-top: 24px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px dashed #e2e8f0; text-align: center;">
+    <span style="font-size: 12px; color: #94a3b8;">Hospital ne abhi aapko review nahi diya.</span>
+</div>
+{% endif %}
+<!-- btn-back ke baad add karo -->
+<a href="{% url 'my_applications' %}" class="btn-back">Cancel and Go Back</a>
+
+{% if hospital_review %}
+<div style="margin-top:24px; padding:16px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">
+    <span style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">
+        🏥 Hospital Ne Aapko Diya Review
+    </span>
+    <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:22px;">
+            {% for i in "12345" %}{% if forloop.counter <= hospital_review.rating %}⭐{% endif %}{% endfor %}
+        </span>
+        <span style="font-size:14px; font-weight:800; color:#1e293b;">{{ hospital_review.rating }}/5</span>
+    </div>
+    {% if hospital_review.comment %}
+    <p style="font-size:13px; color:#64748b; margin-top:8px; line-height:1.6;">{{ hospital_review.comment }}</p>
+    {% endif %}
+</div>
+{% else %}
+<div style="margin-top:24px; padding:14px; background:#f8fafc; border-radius:12px; border:1px dashed #e2e8f0; text-align:center;">
+    <span style="font-size:12px; color:#94a3b8;">Hospital ne abhi aapko review nahi diya.</span>
+</div>
+{% endif %}    </div>
+</div>
+
+<script>
+function syncStars(radio) {
+    const val = parseInt(radio.value);
+    document.querySelectorAll('.star-icon').forEach(star => {
+        const sv = parseInt(star.dataset.val);
+        if (sv <= val) {
+            star.classList.add('star-active');
+        } else {
+            star.classList.remove('star-active');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const checked = document.querySelector('input[name="rating"]:checked');
+    if (checked) syncStars(checked);
+
+    document.querySelectorAll('.star-icon').forEach(star => {
+        star.addEventListener('click', () => {
+            const val = star.dataset.val;
+            const radio = document.querySelector(`input[name="rating"][value="${val}"]`);
+            if (radio) {
+                radio.checked = true;
+                syncStars(radio);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

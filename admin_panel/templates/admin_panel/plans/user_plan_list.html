@@ -1,0 +1,176 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block content %}
+<style>
+  .dash-wrap { padding: 4px 0 32px; font-family: 'Inter', sans-serif; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .top-bar-title { font-size: 22px; font-weight: 600; color: #111827; margin: 0; }
+  
+  .filter-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 16px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .f-input {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid #e5e7eb;
+    font-size: 13px; outline: none; transition: border-color 0.15s;
+  }
+  .f-input:focus { border-color: #534AB7; }
+  .btn-search {
+    background: #534AB7; color: #fff; border: none;
+    padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+
+  .reg-card { 
+    background: #fff; border: 1px solid #e5e7eb; 
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  
+  .desktop-table { width: 100%; overflow-x: auto; }
+  .desktop-table table { width: 100%; border-collapse: collapse; }
+  .desktop-table th { 
+    font-size: 11px; font-weight: 700; color: #9ca3af; 
+    text-transform: uppercase; letter-spacing: .4px; 
+    padding: 11px 18px; text-align: left; border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+  }
+  .desktop-table td { 
+    padding: 14px 18px; font-size: 13px; color: #111827; 
+    border-bottom: 1px solid #f9fafb; vertical-align: middle;
+  }
+  .desktop-table tr:hover td { background: #fafafa; }
+
+  .prog-bg { background: #f3f4f6; border-radius: 10px; height: 6px; width: 80px; margin-top: 5px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 10px; }
+
+  .badge-plan {
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px;
+    background: #EEEDFE; color: #534AB7;
+  }
+  .badge-role {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px;
+    background: #f3f4f6; color: #6b7280;
+  }
+
+  .view-btn { 
+    font-size: 12px; font-weight: 500; padding: 5px 12px; 
+    border-radius: 7px; border: 1px solid #e5e7eb; 
+    background: #fff; color: #374151; text-decoration: none;
+  }
+  .view-btn:hover { background: #f9fafb; border-color: #d1d5db; }
+</style>
+
+<div class="dash-wrap">
+
+  <div class="top-bar">
+    <div class="top-bar-title">All User Subscriptions</div>
+    <a href="{% url 'admin_plan_list' %}" class="view-btn">Back to Plans</a>
+  </div>
+
+  <div class="filter-card">
+    <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+      <select name="role" class="f-input" onchange="this.form.submit()" style="min-width: 150px;">
+        <option value="" {% if not role %}selected{% endif %}>All Roles</option>
+        <option value="hospital" {% if role == 'hospital' %}selected{% endif %}>Hospital</option>
+        <option value="doctor" {% if role == 'doctor' %}selected{% endif %}>Doctor</option>
+        <option value="nurse" {% if role == 'nurse' %}selected{% endif %}>Nurse</option>
+      </select>
+      
+      <input type="text" name="search" class="f-input" placeholder="Search username..." value="{{ search }}" style="flex: 1; min-width: 200px;">
+      
+      <button type="submit" class="btn-search">Search</button>
+      {% if role or search %}
+        <a href="?" class="view-btn" style="border:none; color:#E24B4A;">Clear All</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="reg-card">
+    <div class="desktop-table">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Active Plan</th>
+            {% if not role or role == 'doctor' or role == 'nurse' %}
+              <th>Tokens</th>
+              <th>Vac. Usage</th>
+            {% endif %}
+            {% if not role or role == 'hospital' %}
+              <th>Shifts Usage</th>
+              <th>Post Usage</th>
+            {% endif %}
+            <th>Subscribed On</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for up in user_plans %}
+          <tr>
+            <td><strong style="color: #534AB7;">{{ up.user.username }}</strong></td>
+            <td><span class="badge-role">{{ up.user.role }}</span></td>
+            <td>
+              {% if up.plan %}
+                <span class="badge-plan">{{ up.plan.name }}</span>
+                <div style="font-size: 10px; color: #1D9E75; margin-top: 2px;">₹{{ up.plan.price }}</div>
+              {% else %}
+                <span style="color: #9ca3af;">No Plan</span>
+              {% endif %}
+            </td>
+
+            {% if not role or role == 'doctor' or role == 'nurse' %}
+              {% if up.user.role != 'hospital' %}
+                <td><strong>{{ up.plan.tokens|default:"0" }}</strong></td>
+                <td>
+                  <span style="font-size: 10px; font-weight: 700;">{{ up.vacancy_limit_used }}/{{ up.plan.vacancy_limit|default:"0" }}</span>
+                  <div class="prog-bg">
+                    <div class="prog-fill" style="width:{% if up.plan.vacancy_limit %}{% widthratio up.vacancy_limit_used up.plan.vacancy_limit 100 %}{% else %}0{% endif %}%; background: #534AB7;"></div>
+                  </div>
+                </td>
+              {% else %}
+                <td style="color: #e5e7eb;">-</td>
+                <td style="color: #e5e7eb;">-</td>
+              {% endif %}
+            {% endif %}
+
+            {% if not role or role == 'hospital' %}
+              {% if up.user.role == 'hospital' %}
+                <td>
+                  <span style="font-size: 10px; font-weight: 700;">{{ up.shift_post_used }}/{{ up.plan.shift_post_limit|default:"0" }}</span>
+                  <div class="prog-bg">
+                    <div class="prog-fill" style="width:{% if up.plan.shift_post_limit %}{% widthratio up.shift_post_used up.plan.shift_post_limit 100 %}{% else %}0{% endif %}%; background: #BA7517;"></div>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-size: 10px; font-weight: 700;">{{ up.vacancy_post_used }}/{{ up.plan.vacancy_post_limit|default:"0" }}</span>
+                  <div class="prog-bg">
+                    <div class="prog-fill" style="width:{% if up.plan.vacancy_post_limit %}{% widthratio up.vacancy_post_used up.plan.vacancy_post_limit 100 %}{% else %}0{% endif %}%; background: #1D9E75;"></div>
+                  </div>
+                </td>
+              {% else %}
+                <td style="color: #e5e7eb;">-</td>
+                <td style="color: #e5e7eb;">-</td>
+              {% endif %}
+            {% endif %}
+
+            <td style="color: #9ca3af; font-size: 11px;">{{ up.bought_at|date:"d M Y" }}</td>
+            <td style="text-align: right; padding-right: 20px;">
+              <a href="{% url 'admin_assign_plan' up.user.pk %}" class="view-btn">Assign</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" style="text-align: center; padding: 60px; color: #9ca3af;">
+              No subscription records found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
